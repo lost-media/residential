@@ -9,14 +9,6 @@ class ResidentialCategory extends BaseCategory implements IStructureCategory {
 	verboseName = "Residential" as const;
 	verboseNamePlural = "Residentials" as const;
 	structures = loadStructures(script);
-
-	getStructureById(id: string) {
-		return this.structures.find((structure) => structure.id === id);
-	}
-
-	getStructureByName(name: string) {
-		return this.structures.find((structure) => structure.name === name);
-	}
 }
 
 const residentialCategory: IStructureCategory = new ResidentialCategory();

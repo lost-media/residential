@@ -12,5 +12,4 @@ class RoadCategory extends BaseCategory implements IStructureCategory {
 }
 
 const roadCategory: IStructureCategory = new RoadCategory();
-
 export default roadCategory;

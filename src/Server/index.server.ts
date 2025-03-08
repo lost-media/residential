@@ -6,7 +6,7 @@ KnitServer.Start()
 	.andThen(() => {
 		LoggerFactory.getLogger().log("Server started", LogLevel.Info);
 
-		StructureCategories.forEach((category) => {
+		StructureCategories.forEach((_, category) => {
 			LoggerFactory.getLogger().log(
 				`Loaded category: ${category.verboseName} with ${category.structures.size()} structures`,
 				LogLevel.Info,

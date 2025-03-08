@@ -2,13 +2,5 @@ export type RbxAssetId = `rbxassetid://${number}`;
 
 declare global {
 	type RbxAssetId = `rbxassetid://${number}`;
-
-	interface ReplicatedStorage extends Instance {
-		Models: Folder & {
-			Road: Folder;
-			Residential: Folder;
-		};
-	}
+	type Optional<T> = T | undefined;
 }
-
-// extend replicatedstorage

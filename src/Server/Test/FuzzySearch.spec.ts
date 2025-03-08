@@ -1,31 +1,33 @@
-import { assertEqual } from "Shared/Test/Assert";
-import { BaseTest } from "Shared/Test/BaseTest";
-import { Profile, Test } from "Shared/Test/Decorators";
+import { BaseTest } from "Shared/LMUnit/BaseTest";
+import { Profile, Test } from "Shared/LMUnit/Decorators";
+import { Assert } from "Shared/LMUnit/Assert";
 
-class FuzzySearchTest extends BaseTest {
+interface FuzzySearchTestProps {
+	someProperty: number;
+}
+
+class FuzzySearchTest extends BaseTest<FuzzySearchTest> {
 	@Test
 	public testMethod() {
-		assertEqual(1, 1);
-		assertEqual(2, 1);
+		Assert.equal(1, 1);
+		Assert.equal(2, 1);
 
-		assertEqual(2, 5);
+		Assert.equal(2, 5);
 	}
 
 	@Test
 	public testMethod2() {
-		assertEqual(2, 1);
-		assertEqual(2, 5);
+		Assert.equal(2, 1);
+		Assert.equal(2, 5);
 	}
 
 	@Profile
 	@Test
 	public testMethod3() {
-		assertEqual(2, 2);
+		Assert.equal(2, 2);
 	}
 
-	public beforeAll(): void {
-		print("FuzzySearchTest.beforeAll");
-	}
+	public beforeEach(): void {}
 }
 
 export = FuzzySearchTest;

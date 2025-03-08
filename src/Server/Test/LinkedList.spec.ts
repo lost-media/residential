@@ -1,15 +1,35 @@
 import { LinkedList } from "Shared/Lib/DataStructures/LinkedList";
-import { BaseTest } from "Shared/Test/BaseTest";
-import { Profile, Test } from "Shared/Test/Decorators";
+import { BaseTest } from "Shared/LMUnit/BaseTest";
+import { Profile, Test } from "Shared/LMUnit/Decorators";
+import { Assert } from "Shared/LMUnit/Assert";
 
 class TestLinkedList extends BaseTest {
 	@Profile
 	@Test
-	public testMethod() {
+	public shouldCreateLinkedList() {
 		const linkedList = new LinkedList<number, number>();
 		for (let i = 0; i < 100000; i++) {
 			linkedList.add(i, i);
 		}
+
+		Assert.equal(linkedList.size(), 100000);
+		const array = linkedList.toArray();
+
+		Assert.contains(100000, array);
+		Assert.notUndefined(array);
+	}
+
+	@Test
+	public shouldClearLinkedList() {
+		const linkedList = new LinkedList<number, number>();
+		for (let i = 0; i < 100000; i++) {
+			linkedList.add(i, i);
+		}
+
+		Assert.equal(linkedList.size(), 100000);
+		linkedList.clear();
+
+		Assert.empty(linkedList.toArray());
 	}
 }
 

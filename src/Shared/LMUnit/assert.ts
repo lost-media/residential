@@ -8,7 +8,7 @@ class AssertionFailedException {
 	public constructor(expected: unknown, actual: unknown);
 	public constructor(message?: string);
 	public constructor(message: unknown, actual?: unknown) {
-		this.message = actual !== undefined ? `Expected: ${message}\nActual: ${actual}` : <string>message;
+		this.message = actual !== undefined ? `Expected: ${message}, Actual: ${actual}` : <string>message;
 		error(this.toString(), 4);
 	}
 

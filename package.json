@@ -4,7 +4,8 @@
 	"main": "index.js",
 	"scripts": {
 		"build": "rbxtsc",
-		"watch": "rbxtsc -w"
+		"watch": "rbxtsc -w",
+		"format": "prettier --write ."
 	},
 	"keywords": [],
 	"author": "",
@@ -24,7 +25,14 @@
 		"typescript": "^5.8.2"
 	},
 	"dependencies": {
+		"@flamework/components": "^1.2.4",
+		"@flamework/core": "^1.2.4",
+		"@flamework/networking": "^1.2.4",
+		"@rbxts/instance-utility": "^1.0.3",
 		"@rbxts/knit": "^0.0.21-alpha.0",
-		"@rbxts/services": "^1.5.5"
+		"@rbxts/object-utils": "^1.0.4",
+		"@rbxts/services": "^1.5.5",
+		"@rbxts/string-builder": "^1.0.2",
+		"rbxts-transformer-flamework": "^1.2.4"
 	}
 }

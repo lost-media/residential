@@ -1,9 +1,9 @@
 import { LinkedList } from "Shared/Lib/DataStructures/LinkedList";
-import { BaseTest } from "Shared/LMUnit/BaseTest";
-import { Profile, Test } from "Shared/LMUnit/Decorators";
-import { Assert } from "Shared/LMUnit/Assert";
+import { Profile, Test, TestSuite } from "Shared/LMUnit/decorators";
+import { Assert } from "Shared/LMUnit/assert";
 
-class TestLinkedList extends BaseTest {
+@TestSuite
+class TestLinkedList {
 	@Profile
 	@Test
 	public shouldCreateLinkedList() {

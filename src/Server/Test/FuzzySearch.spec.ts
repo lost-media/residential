@@ -1,18 +1,23 @@
-import { BaseTest } from "Shared/LMUnit/BaseTest";
-import { Profile, Test } from "Shared/LMUnit/Decorators";
-import { Assert } from "Shared/LMUnit/Assert";
+import { Profile, Test, TestSuite } from "Shared/LMUnit/decorators";
+import { Assert } from "Shared/LMUnit/assert";
 
-interface FuzzySearchTestProps {
-	someProperty: number;
-}
+@TestSuite
+class FuzzySearchTest {
+	private something: boolean = false;
 
-class FuzzySearchTest extends BaseTest<FuzzySearchTest> {
+	setup() {
+		this.something = true;
+	}
+
 	@Test
 	public testMethod() {
 		Assert.equal(1, 1);
 		Assert.equal(2, 1);
 
 		Assert.equal(2, 5);
+
+		print(this.something);
+		Assert.true(this.something);
 	}
 
 	@Test
@@ -21,8 +26,8 @@ class FuzzySearchTest extends BaseTest<FuzzySearchTest> {
 		Assert.equal(2, 5);
 	}
 
-	@Profile
 	@Test
+	@Profile
 	public testMethod3() {
 		Assert.equal(2, 2);
 	}

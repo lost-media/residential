@@ -1,7 +1,7 @@
 import { Koins } from "Shared/Lib/Residential/Currency";
 import { IStructure } from "Shared/Lib/Residential/types";
 
-const smallHouse: IStructure = {
+const structure: IStructure = {
 	id: "residential-small-house",
 
 	name: "Small House",
@@ -14,4 +14,4 @@ const smallHouse: IStructure = {
 	},
 };
 
-export default smallHouse;
+export = structure;

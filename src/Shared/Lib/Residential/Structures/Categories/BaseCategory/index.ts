@@ -1,4 +1,5 @@
 import { IStructureCategory, IStructure } from "Shared/Lib/Residential/types";
+import fuzzySearch from "Shared/Util/FuzzySearch";
 
 abstract class BaseCategory implements IStructureCategory {
 	abstract id: string;
@@ -14,6 +15,21 @@ abstract class BaseCategory implements IStructureCategory {
 
 	getStructureByName(name: string) {
 		return this.structures.find((structure) => structure.name === name);
+	}
+
+	getStructuresWithinPrice(price: number) {
+		return this.structures.filter((structure) => structure.price.value <= price);
+	}
+
+	getSearchResults(query: string) {
+		const results: Array<IStructure> = new Array<IStructure>();
+
+		this.structures.forEach((structure) => {
+			if (fuzzySearch(query, structure.name + structure.description + structure.id)) {
+				results.push(structure);
+			}
+		});
+		return results;
 	}
 }
 

@@ -3,10 +3,10 @@ import { Koins } from "Shared/Lib/Residential/Currency";
 import { IStructure } from "Shared/Lib/Residential/types";
 
 const structure: IStructure = {
-	id: "road-normal",
+	id: "road-t-intersection",
 
-	name: "Normal Road",
-	description: "A normal road.",
+	name: "T-Intersection",
+	description: "A T-intersection.",
 	model: ReplicatedStorage.Models.Road.FindFirstChild("NormalRoad") as Model,
 
 	price: {

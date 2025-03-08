@@ -27,4 +27,6 @@ export interface IStructureCategory {
 
 	getStructureById(id: string): IStructure | undefined;
 	getStructureByName(name: string): IStructure | undefined;
+	getStructuresWithinPrice(price: number): IStructure[];
+	getSearchResults(query: string): IStructure[];
 }

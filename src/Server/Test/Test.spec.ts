@@ -1,5 +1,5 @@
-import { Assert } from "Shared/LMUnit/assert";
-import { BeforeEach, BeforeAll, Test, AfterEach, AfterAll } from "Shared/LMUnit/decorators";
+import { Assert } from "shared/lunit/assert";
+import { BeforeEach, BeforeAll, Test, AfterEach, AfterAll } from "shared/lunit/decorators";
 
 class TestTest {
 	@Test

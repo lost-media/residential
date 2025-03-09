@@ -1,4 +1,4 @@
-import { Logger, ILogger, LogLevel } from "Shared/Util/Logger";
+import { Logger, ILogger, LogLevel } from "shared/util/Logger";
 
 export default class LoggerFactory {
 	private static logs: Map<LogLevel, Logger> = new Map<LogLevel, Logger>();

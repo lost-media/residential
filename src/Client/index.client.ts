@@ -1,5 +1,5 @@
 import { KnitClient } from "@rbxts/knit";
-import LoggerFactory, { LogLevel } from "Shared/Util/Logger/Factory";
+import LoggerFactory, { LogLevel } from "shared/util/Logger/Factory";
 
 KnitClient.AddControllers(script.FindFirstChild("controllers") as Instance);
 

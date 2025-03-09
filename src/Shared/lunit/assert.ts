@@ -1,3 +1,6 @@
+type LazyLoadedMessageCallback = () => string;
+type MessageType = string | LazyLoadedMessageCallback;
+
 type ClassType<T = object, Args extends unknown[] = never[]> = {
 	new (...args: Args): T;
 };
@@ -17,23 +20,33 @@ class AssertionFailedException {
 	}
 }
 
+function resolveMessageOrCallback(message: MessageType): string {
+	if (typeOf(message) === "string") {
+		return message as string;
+	} else {
+		return (message as () => string)();
+	}
+}
+
 export class Assert {
 	public static equal<T>(actual: T, expected: T): void;
-	public static equal<T>(actual: T, expected: T, message?: string): void {
-		if (actual !== expected) {
-			if (message !== undefined) {
-				throw new AssertionFailedException(message);
-			} else {
-				throw new AssertionFailedException(expected, actual);
-			}
+	public static equal<T>(actual: T, expected: T, message?: MessageType): void {
+		if (actual === true) return;
+
+		if (message !== undefined) {
+			throw new AssertionFailedException(resolveMessageOrCallback(message));
+		} else {
+			throw new AssertionFailedException(expected, actual);
 		}
 	}
 
 	public static notEqual<T>(actual: T, expected: T): void;
-	public static notEqual<T>(actual: T, expected: T, message?: string): void {
+	public static notEqual<T>(actual: T, expected: T, message?: MessageType): void {
+		if (actual !== true) return;
+
 		if (actual === expected) {
 			if (message !== undefined) {
-				throw new AssertionFailedException(message);
+				throw new AssertionFailedException(resolveMessageOrCallback(message));
 			} else {
 				throw new AssertionFailedException(`Expected ${actual} to not equal ${expected}`);
 			}
@@ -41,91 +54,91 @@ export class Assert {
 	}
 
 	public static true(actual: boolean): void;
-	public static true(actual: boolean, message?: string): void {
+	public static true(actual: boolean, message?: MessageType): void {
 		if (actual === true) return;
 
 		if (message !== undefined) {
-			throw new AssertionFailedException(message);
+			throw new AssertionFailedException(resolveMessageOrCallback(message));
 		} else {
 			throw new AssertionFailedException(true, actual);
 		}
 	}
 
 	public static false(actual: boolean): void;
-	public static false(actual: boolean, message?: string): void {
+	public static false(actual: boolean, message?: MessageType): void {
 		if (actual === false) return;
 		if (message !== undefined) {
-			throw new AssertionFailedException(message);
+			throw new AssertionFailedException(resolveMessageOrCallback(message));
 		} else {
 			throw new AssertionFailedException(false, actual);
 		}
 	}
 
 	public static undefined(actual: unknown): void;
-	public static undefined(actual: unknown, message?: string): void {
+	public static undefined(actual: unknown, message?: MessageType): void {
 		if (actual === undefined) return;
 		if (message !== undefined) {
-			throw new AssertionFailedException(message);
+			throw new AssertionFailedException(resolveMessageOrCallback(message));
 		} else {
 			throw new AssertionFailedException(undefined, actual);
 		}
 	}
 
 	public static notUndefined(actual: unknown): void;
-	public static notUndefined(actual: unknown, message?: string): void {
+	public static notUndefined(actual: unknown, message?: MessageType): void {
 		if (actual !== undefined) return;
-		if (message === undefined) {
-			throw new AssertionFailedException(message);
+		if (message !== undefined) {
+			throw new AssertionFailedException(resolveMessageOrCallback(message));
 		} else {
 			throw new AssertionFailedException("not nil", actual);
 		}
 	}
 
 	public static greaterThan(actual: number, expected: number): void;
-	public static greaterThan(actual: number, expected: number, message?: string): void {
+	public static greaterThan(actual: number, expected: number, message?: MessageType): void {
 		if (actual > expected) return;
-		if (message === undefined) {
-			throw new AssertionFailedException(message);
+		if (message !== undefined) {
+			throw new AssertionFailedException(resolveMessageOrCallback(message));
 		} else {
 			throw new AssertionFailedException(`Expected ${actual} to be greater than ${expected}`);
 		}
 	}
 
 	public static greaterThanOrEqual(actual: number, expected: number): void;
-	public static greaterThanOrEqual(actual: number, expected: number, message?: string): void {
+	public static greaterThanOrEqual(actual: number, expected: number, message?: MessageType): void {
 		if (actual >= expected) return;
-		if (message === undefined) {
-			throw new AssertionFailedException(message);
+		if (message !== undefined) {
+			throw new AssertionFailedException(resolveMessageOrCallback(message));
 		} else {
 			throw new AssertionFailedException(`Expected ${actual} to be greater than or equal to ${expected}`);
 		}
 	}
 
 	public static lessThan(actual: number, expected: number): void;
-	public static lessThan(actual: number, expected: number, message?: string): void {
+	public static lessThan(actual: number, expected: number, message?: MessageType): void {
 		if (actual < expected) return;
-		if (message === undefined) {
-			throw new AssertionFailedException(message);
+		if (message !== undefined) {
+			throw new AssertionFailedException(resolveMessageOrCallback(message));
 		} else {
 			throw new AssertionFailedException(`Expected ${actual} to be less than ${expected}`);
 		}
 	}
 
 	public static lessThanOrEqual(actual: number, expected: number): void;
-	public static lessThanOrEqual(actual: number, expected: number, message?: string): void {
+	public static lessThanOrEqual(actual: number, expected: number, message?: MessageType): void {
 		if (actual <= expected) return;
-		if (message === undefined) {
-			throw new AssertionFailedException(message);
+		if (message !== undefined) {
+			throw new AssertionFailedException(resolveMessageOrCallback(message));
 		} else {
 			throw new AssertionFailedException(`Expected ${actual} to be less than or equal to ${expected}`);
 		}
 	}
 
 	public static between(actual: number, min: number, max: number): void;
-	public static between(actual: number, min: number, max: number, message?: string): void {
+	public static between(actual: number, min: number, max: number, message?: MessageType): void {
 		if (actual >= min && actual <= max) return;
-		if (message === undefined) {
-			throw new AssertionFailedException(message);
+		if (message !== undefined) {
+			throw new AssertionFailedException(resolveMessageOrCallback(message));
 		} else {
 			throw new AssertionFailedException(`Expected ${actual} to be between ${min}-${max}`);
 		}
@@ -133,7 +146,7 @@ export class Assert {
 
 	public static throws(method: () => void): void;
 	public static throws(method: () => void, exception: string): void;
-	public static throws(callback: () => void, exception?: string | ClassType, message?: string): void {
+	public static throws(callback: () => void, exception?: string | ClassType, message?: MessageType): void {
 		let thrown: unknown = undefined;
 
 		try {
@@ -148,21 +161,25 @@ export class Assert {
 			}
 		}
 
-		throw new AssertionFailedException(
-			message !== undefined
-				? message
-				: `Expected method to throw${exception !== undefined ? ' "' + tostring(exception) + `", threw "${thrown}"` : ""}`,
-		);
+		if (message !== undefined) {
+			throw new AssertionFailedException(resolveMessageOrCallback(message));
+		} else {
+			throw new AssertionFailedException(
+				`Expected method to throw${exception !== undefined ? ' "' + tostring(exception) + `", threw "${thrown}"` : ""}`,
+			);
+		}
 	}
 
 	public static doesNotThrow(method: () => void): void;
-	public static doesNotThrow(callback: () => void, message?: string): void {
+	public static doesNotThrow(callback: () => void, message?: MessageType): void {
 		try {
 			callback();
 		} catch (e) {
-			throw new AssertionFailedException(
-				message !== undefined ? message : `Expected method not to throw, threw:\n${e}`,
-			);
+			if (message !== undefined) {
+				throw new AssertionFailedException(resolveMessageOrCallback(message));
+			} else {
+				throw new AssertionFailedException(`Expected method not to throw, threw:\n${e}`);
+			}
 		}
 	}
 
@@ -189,22 +206,23 @@ export class Assert {
 	}
 
 	public static empty<T extends defined>(array: T[]): void;
-	public static empty<T extends defined>(array: T[], message?: string): void {
+	public static empty<T extends defined>(array: T[], message?: MessageType): void {
 		const size = array.size();
 		if (size === 0) return;
+
 		if (message !== undefined) {
-			throw new AssertionFailedException(message);
+			throw new AssertionFailedException(resolveMessageOrCallback(message));
 		} else {
 			throw new AssertionFailedException(`Expected array to be empty, instead size ${size}`);
 		}
 	}
 
 	public static notEmpty<T extends defined>(array: T[]): void;
-	public static notEmpty<T extends defined>(array: T[], message?: string): void {
+	public static notEmpty<T extends defined>(array: T[], message?: MessageType): void {
 		const size = array.size();
 		if (size !== 0) return;
 		if (message !== undefined) {
-			throw new AssertionFailedException(message);
+			throw new AssertionFailedException(resolveMessageOrCallback(message));
 		} else {
 			throw new AssertionFailedException(`Expected array to be empty, instead size ${size}`);
 		}
@@ -212,39 +230,39 @@ export class Assert {
 
 	// Async Assertions
 	public static resolves<T>(promise: Promise<T>): void;
-	public static resolves<T>(promise: Promise<T>, message?: string): void {
+	public static resolves<T>(promise: Promise<T>, message?: MessageType): void {
 		const [status] = promise.awaitStatus();
 
 		if (status === "Resolved") return;
 
 		if (message !== undefined) {
-			throw new AssertionFailedException(message);
+			throw new AssertionFailedException(resolveMessageOrCallback(message));
 		} else {
 			throw new AssertionFailedException(`Expected Promise to resolve, instead it ${status}`);
 		}
 	}
 
 	public static rejects<T>(promise: Promise<T>): void;
-	public static rejects<T>(promise: Promise<T>, message?: string): void {
+	public static rejects<T>(promise: Promise<T>, message?: MessageType): void {
 		const [status] = promise.awaitStatus();
 
 		if (status === "Rejected") return;
 
 		if (message !== undefined) {
-			throw new AssertionFailedException(message);
+			throw new AssertionFailedException(resolveMessageOrCallback(message));
 		} else {
 			throw new AssertionFailedException(`Expected Promise to reject, instead it ${status}`);
 		}
 	}
 
 	public static async timeout<T>(promise: Promise<T>, duration: number): Promise<void>;
-	public static async timeout<T>(promise: Promise<T>, duration: number, message?: string): Promise<void> {
+	public static async timeout<T>(promise: Promise<T>, duration: number, message?: MessageType): Promise<void> {
 		const [status] = promise.timeout(duration).awaitStatus();
 
 		if (status === "Resolved") return;
 
 		if (message !== undefined) {
-			throw new AssertionFailedException(message);
+			throw new AssertionFailedException(resolveMessageOrCallback(message));
 		} else {
 			throw new AssertionFailedException(`Expected Promise to resolve within ${duration} seconds`);
 		}

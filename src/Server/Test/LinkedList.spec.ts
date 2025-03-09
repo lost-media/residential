@@ -1,6 +1,6 @@
-import { LinkedList } from "Shared/Lib/DataStructures/LinkedList";
-import { Test } from "Shared/LMUnit/decorators";
-import { Assert } from "Shared/LMUnit/assert";
+import { LinkedList } from "shared/lib/DataStructures/LinkedList";
+import { Test } from "shared/lunit/decorators";
+import { Assert } from "shared/lunit/assert";
 
 class TestLinkedList {
 	public shouldCreateLinkedList() {

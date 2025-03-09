@@ -1,4 +1,4 @@
-import { IStructure } from "Shared/Lib/Residential/types";
+import { IStructure } from "shared/lib/Residential/types";
 import { LoadChildren } from "@rbxts/knit/Knit/Util/Loader";
 
 export const FOLDER_NAME = "Structures";

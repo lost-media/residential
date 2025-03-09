@@ -1,7 +1,8 @@
-import { Test } from "Shared/LMUnit/decorators";
-import { Assert } from "Shared/LMUnit/assert";
-import { LinkedList } from "Shared/Lib/DataStructures/LinkedList";
+import { DisplayName, Test } from "shared/lunit/decorators";
+import { Assert } from "shared/lunit/assert";
+import { LinkedList } from "shared/lib/DataStructures/LinkedList";
 
+@DisplayName("idk")
 class FuzzySearchTest {
 	private something: boolean = false;
 
@@ -9,6 +10,7 @@ class FuzzySearchTest {
 		this.something = true;
 	}
 
+	@DisplayName("TEST")
 	public testMethod() {
 		Assert.equal(1, 1);
 		Assert.equal(2, 2);

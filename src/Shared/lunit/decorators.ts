@@ -10,14 +10,60 @@ export function Test<T extends object>(
 	addTest(ctor, propertyKey, {});
 }
 
-export function Test2(options: TestAnnotationOptions) {
+export function Disabled(message?: string) {
 	return function <T extends object>(
 		ctor: T,
-		propertyKey: string,
-		_: TypedPropertyDescriptor<(this: T, ...args: void[]) => void>,
+		propertyKey?: string,
+		_?: TypedPropertyDescriptor<(this: T, ...args: void[]) => void>,
 	): void {
 		if (ctor === undefined) throw "Target cannot be null";
-		addTest(ctor, propertyKey, options);
+		// addTest(ctor, propertyKey, options);
+	};
+}
+
+export function DisplayName(name: string) {
+	return function <T extends object>(
+		ctor: T,
+		propertyKey?: string,
+		_?: TypedPropertyDescriptor<(this: T, ...args: void[]) => void>,
+	): void {
+		if (ctor === undefined) throw "Target cannot be null";
+		// addTest(ctor, propertyKey, options);
+	};
+}
+
+export function Timeout(timeInMilliseconds: number) {
+	return function <T extends object>(
+		ctor: T,
+		propertyKey?: string,
+		_?: TypedPropertyDescriptor<(this: T, ...args: void[]) => void>,
+	): void {
+		if (ctor === undefined) throw "Target cannot be null";
+		// addTest(ctor, propertyKey, options);
+	};
+}
+
+export function Order(orderIndex: number) {
+	return function <T extends object>(
+		ctor: T,
+		propertyKey?: string,
+		_?: TypedPropertyDescriptor<(this: T, ...args: void[]) => void>,
+	): void {
+		if (ctor === undefined) throw "Target cannot be null";
+		// addTest(ctor, propertyKey, options);
+	};
+}
+
+type Scope = "Client" | "Server" | "Both";
+
+export function EnableInScope(scope: Scope) {
+	return function <T extends object>(
+		ctor: T,
+		propertyKey?: string,
+		_?: TypedPropertyDescriptor<(this: T, ...args: void[]) => void>,
+	): void {
+		if (ctor === undefined) throw "Target cannot be null";
+		// addTest(ctor, propertyKey, options);
 	};
 }
 
@@ -74,3 +120,14 @@ export function AfterAll<T extends object>(
 	if (ctor === undefined) throw "Target cannot be null";
 	addAnnotations(ctor, propertyKey, Annotation.AfterAll);
 }
+
+export default {
+	Test,
+	DisplayName,
+	Before,
+	BeforeAll,
+	BeforeEach,
+	After,
+	AfterEach,
+	AfterAll,
+};

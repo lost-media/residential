@@ -1,4 +1,4 @@
-import { Currency } from "Shared/Lib/Residential/Currency";
+import { Currency } from "shared/lib/Residential/Currency";
 
 export type Price = {
 	value: number;

@@ -1,6 +1,6 @@
 import { getDescendantsOfType } from "@rbxts/instance-utility";
-import { flatten, hasMetadata } from "./utils";
-import { Constructor, Metadata, TestMethod } from "./common";
+import { flatten, getAnnotation, hasMetadata } from "./utils";
+import { Annotation, Constructor, Metadata, TestMethod } from "./common";
 import { StringBuilder } from "@rbxts/string-builder";
 import Object from "@rbxts/object-utils";
 
@@ -67,9 +67,12 @@ export class TestRunner {
 
 		for (const [testClass, testClassInstance] of this.testClasses) {
 			// run beforeAll here
-			if (testClassInstance.beforeAll !== undefined) {
+
+			/*if (testClassInstance.beforeAll !== undefined) {
 				testClassInstance.beforeAll(testClass);
-			}
+			}*/
+			const beforeAllCallbacks = getAnnotation(testClass, Annotation.BeforeAll);
+			beforeAllCallbacks.forEach((callback) => callback());
 
 			await this.runTestClass(testClass, testClassInstance);
 
@@ -121,6 +124,7 @@ export class TestRunner {
 
 		const runTestCase = async (callback: Callback, name: string): Promise<boolean> => {
 			const start = os.clock();
+
 			try {
 				await callback(testClassInstance);
 			} catch (e) {
@@ -137,9 +141,18 @@ export class TestRunner {
 		const testList = this.getTestsFromTestClass(testClass);
 
 		testList.forEach(async (test) => {
+			const beforeEachCallbacks = getAnnotation(testClass, Annotation.BeforeEach);
+			beforeEachCallbacks.forEach((callback) => callback(testClassInstance));
+
 			const callback = <Callback>(testClass as unknown as TestClassType)[test.name];
 			await runTestCase(callback, test.name);
+
+			const afterEachCallback = getAnnotation(testClass, Annotation.AfterEach);
+			afterEachCallback.forEach((callback) => callback(testClassInstance));
 		});
+
+		const afterAllCallback = getAnnotation(testClass, Annotation.AfterAll);
+		afterAllCallback.forEach((callback) => callback(testClassInstance));
 	}
 
 	private generateOutput(elapsedTime: number): string {

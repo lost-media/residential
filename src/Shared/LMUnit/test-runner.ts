@@ -64,25 +64,25 @@ export class TestRunner {
 	public async run(): Promise<void> {
 		const start = os.clock();
 
+		const promisesToResolve: Promise<void>[] = [];
+
 		for (const [testClass, testClassInstance] of this.testClasses) {
 			// run beforeAll here
 
-			/*if (testClassInstance.beforeAll !== undefined) {
-				testClassInstance.beforeAll(testClass);
-			}*/
 			const beforeAllCallbacks = getAnnotation(testClass, Annotation.BeforeAll);
 			beforeAllCallbacks.forEach((callback) => callback());
 
-			await this.runTestClass(testClass, testClassInstance);
+			const runClass = this.runTestClass(testClass, testClassInstance);
 
-			if (testClassInstance.afterAll !== undefined) {
-				testClassInstance.afterAll(testClass);
-			}
+			runClass.forEach((promise) => {
+				promisesToResolve.push(promise);
+			});
 		}
 
-		const elapsedTime = os.clock() - start;
-
-		print(this.generateOutput(elapsedTime));
+		await Promise.all(promisesToResolve).then(() => {
+			const elapsedTime = os.clock() - start;
+			print(this.generateOutput(elapsedTime));
+		});
 	}
 
 	private getTestsFromTestClass(testClass: TestClassConstructor): ReadonlyArray<TestMethod> {
@@ -98,7 +98,7 @@ export class TestRunner {
 		return res;
 	}
 
-	private async runTestClass(testClass: TestClassConstructor, testClassInstance: TestClassInstance): Promise<void> {
+	private runTestClass(testClass: TestClassConstructor, testClassInstance: TestClassInstance): Promise<void>[] {
 		const addResult = (name: string, result: TestCaseResult) => {
 			let classResults = this.results.get(testClass);
 			if (classResults === undefined) classResults = this.results.set(testClass, {}).get(testClass)!;
@@ -125,45 +125,62 @@ export class TestRunner {
 			callback: Callback,
 			name: string,
 			options?: TestAnnotationOptions,
-		): Promise<boolean> => {
+		): Promise<void> => {
 			const start = os.clock();
 			const timeout = options?.timeout;
-			try {
-				await callback(testClassInstance);
-			} catch (e) {
-				const timeElapsed = os.clock();
+
+			/*return Promise.try(async () => {
+				const callbackPromise = new Promise<void>((resolve, reject) => {
+					spawn(async () => {
+						try {
+							await callback(testClassInstance);
+							resolve();
+						} catch (e) {
+							reject(e);
+						}
+					});
+				});
+
+				return await callbackPromise;
+			}).catch((e) => {
+				print(e);
+				const timeElapsed = os.clock() - start;
 				fail(e, name, { timeElapsed });
-				return false;
+			});
+			*/
+
+			try {
+				await callback();
+			} catch (e) {
+				const timeElapsed = os.clock() - start;
+				fail(e, name, { timeElapsed });
+				return Promise.resolve();
 			}
 
 			const timeElapsed = os.clock() - start;
-
-			if (timeout !== undefined) {
-				if (timeout < timeElapsed * 1000) {
-					fail(`Timed out after ${timeout}ms`, name, { timeElapsed });
-					return false;
-				}
-			}
-
 			pass(name, { timeElapsed });
-			return true;
+			return Promise.resolve();
 		};
 
 		const testList = this.getTestsFromTestClass(testClass);
 
-		testList.forEach(async (test) => {
+		const testPromises = testList.map(async (test) => {
 			const beforeEachCallbacks = getAnnotation(testClass, Annotation.BeforeEach);
 			beforeEachCallbacks.forEach((callback) => callback(testClassInstance));
 
 			const callback = <Callback>(testClass as unknown as TestClassType)[test.name];
-			runTestCase(callback, test.name, test.options);
+			const res = runTestCase(() => callback(testClassInstance), test.name, test.options);
 
 			const afterEachCallback = getAnnotation(testClass, Annotation.AfterEach);
-			afterEachCallback.forEach((callback) => callback(testClassInstance));
+			afterEachCallback.forEach((cb) => cb(testClassInstance));
+
+			return res;
 		});
 
 		const afterAllCallback = getAnnotation(testClass, Annotation.AfterAll);
 		afterAllCallback.forEach((callback) => callback(testClassInstance));
+
+		return testPromises;
 	}
 
 	private generateOutput(elapsedTime: number): string {
@@ -171,11 +188,17 @@ export class TestRunner {
 
 		const getSymbol = (passed: boolean) => (passed ? "+" : "×");
 
+		const totalTestsRan = this.failedTests + this.passedTests;
+
+		if (totalTestsRan === 0) {
+			results.appendLine("No tests ran.");
+			return results.toString();
+		}
+
 		this.results.forEach((testResultsRecord, testClass) => {
 			const testResults = Object.entries(testResultsRecord);
 
 			const allTestsPassed = testResults.every(([_, cases]) => cases.errorMessage === undefined);
-
 			const totalTimeElapsed = testResults.map(([_, val]) => val.timeElapsed).reduce((sum, n) => sum + n);
 
 			results.appendLine(

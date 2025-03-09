@@ -8,17 +8,17 @@ const TESTS_ENABLED = true;
 const testFolder = script.FindFirstChild("Test");
 
 KnitServer.Start()
-	.andThen(() => {
+	.andThen(async () => {
 		LoggerFactory.getLogger().log("Server started", LogLevel.Info);
 
 		if (TESTS_ENABLED) {
 			LoggerFactory.getLogger().log("Running tests...", LogLevel.Info);
 			// Run tests here
 			if (testFolder) {
-				promisify(() => {
+				promisify(async () => {
 					const testRunner = new TestRunner(testFolder);
 
-					testRunner.run();
+					await testRunner.run();
 				})()
 					.then(() => {
 						LoggerFactory.getLogger().log("Tests complete", LogLevel.Info);

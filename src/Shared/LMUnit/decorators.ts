@@ -1,5 +1,5 @@
-import { Annotation, Metadata, TestAnnotationOptions } from "./common";
-import { setMetadata, addTest, addAnnotations } from "./utils";
+import { Annotation, TestAnnotationOptions } from "./common";
+import { addTest, addAnnotations } from "./utils";
 
 export function Test<T extends object>(
 	ctor: T,
@@ -72,5 +72,5 @@ export function AfterAll<T extends object>(
 	_: TypedPropertyDescriptor<(this: T, ...args: void[]) => void>,
 ): void {
 	if (ctor === undefined) throw "Target cannot be null";
-	addAnnotations(ctor, propertyKey, Annotation.AfterEach);
+	addAnnotations(ctor, propertyKey, Annotation.AfterAll);
 }

@@ -35,7 +35,7 @@ export class Assert {
 			if (message !== undefined) {
 				throw new AssertionFailedException(message);
 			} else {
-				throw new AssertionFailedException(expected, actual);
+				throw new AssertionFailedException(`Expected ${actual} to not equal ${expected}`);
 			}
 		}
 	}
@@ -237,8 +237,8 @@ export class Assert {
 		}
 	}
 
-	public static timeout<T>(promise: Promise<T>, duration: number): void;
-	public static timeout<T>(promise: Promise<T>, duration: number, message?: string): void {
+	public static async timeout<T>(promise: Promise<T>, duration: number): Promise<void>;
+	public static async timeout<T>(promise: Promise<T>, duration: number, message?: string): Promise<void> {
 		const [status] = promise.timeout(duration).awaitStatus();
 
 		if (status === "Resolved") return;

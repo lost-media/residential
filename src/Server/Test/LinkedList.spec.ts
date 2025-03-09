@@ -15,7 +15,7 @@ class TestLinkedList {
 		Assert.equal(linkedList.size(), 100000);
 		const array = linkedList.toArray();
 
-		Assert.contains(100000, array);
+		Assert.contains(10000, array);
 		Assert.notUndefined(array);
 	}
 

@@ -1,11 +1,15 @@
 import { getDescendantsOfType } from "@rbxts/instance-utility";
 import { flatten, hasMetadata } from "./utils";
-import { Metadata, TestMethod } from "./common";
+import { Constructor, Metadata, TestMethod } from "./common";
 import { StringBuilder } from "@rbxts/string-builder";
 import Object from "@rbxts/object-utils";
 
+type TestClassInstance = Record<string, Callback>;
+type TestClassConstructor = Constructor<TestClassInstance>;
+
 type TestClassType = {
 	[Metadata.TestList]: Map<string, TestMethod>;
+	setUp?: Callback;
 	beforeAll?: Callback;
 	beforeEach?: Callback;
 	afterAll?: Callback;
@@ -25,40 +29,51 @@ interface TestRunOptions {
 }
 
 export class TestRunner {
-	private readonly testClasses: Array<TestClassType>;
-	private results: Map<TestClassType, Record<string, TestCaseResult>>;
+	private readonly testClasses: [TestClassConstructor, TestClassInstance][];
+	private results: Map<TestClassConstructor, Record<string, TestCaseResult>>;
 
 	private failedTests: number;
 	private passedTests: number;
 
 	public constructor(...args: Instance[]) {
-		this.testClasses = new Array<TestClassType>();
-		this.results = new Map<TestClassType, Record<string, TestCaseResult>>();
+		this.testClasses = new Array<[TestClassConstructor, TestClassInstance]>();
+		this.results = new Map<TestClassConstructor, Record<string, TestCaseResult>>();
 		this.failedTests = 0;
 		this.passedTests = 0;
 
 		const modules = flatten(args.map((root) => getDescendantsOfType(root, "ModuleScript")));
 		for (const module of modules) {
 			// eslint-disable-next-line @typescript-eslint/no-require-imports
-			const testClass = <TestClassType>require(module);
+			const testClass = <Constructor>require(module);
 			this.addClass(testClass);
 		}
 	}
 
-	private addClass(ctor: TestClassType): void {
-		this.testClasses.push(ctor);
+	private addClass(ctor: Constructor): void {
+		const testClass = <TestClassConstructor>ctor;
+		const newClass = <TestClassInstance>new ctor();
+
+		if (newClass.setUp !== undefined) {
+			newClass.setUp(newClass);
+		}
+
+		this.testClasses.push([testClass, newClass]);
 	}
 
 	public async run(): Promise<void> {
 		const start = os.clock();
 
-		for (const testClass of this.testClasses) {
+		for (const [testClass, testClassInstance] of this.testClasses) {
 			// run beforeAll here
-			if (testClass.beforeAll !== undefined) {
-				testClass.beforeAll();
+			if (testClassInstance.beforeAll !== undefined) {
+				testClassInstance.beforeAll(testClass);
 			}
 
-			await this.runTestClass(testClass);
+			await this.runTestClass(testClass, testClassInstance);
+
+			if (testClassInstance.afterAll !== undefined) {
+				testClassInstance.afterAll(testClass);
+			}
 		}
 
 		const elapsedTime = os.clock() - start;
@@ -66,10 +81,10 @@ export class TestRunner {
 		print(this.generateOutput(elapsedTime));
 	}
 
-	private getTestsFromTestClass(testClass: TestClassType): ReadonlyArray<TestMethod> {
+	private getTestsFromTestClass(testClass: TestClassConstructor): ReadonlyArray<TestMethod> {
 		if (hasMetadata(testClass, Metadata.TestList) === false) return [];
 
-		const list: Map<string, TestMethod> = testClass[Metadata.TestList];
+		const list: Map<string, TestMethod> = (testClass as unknown as TestClassType)[Metadata.TestList];
 
 		const res = new Array<TestMethod>();
 		list.forEach((val) => {
@@ -79,7 +94,7 @@ export class TestRunner {
 		return res;
 	}
 
-	private async runTestClass(testClass: TestClassType): Promise<void> {
+	private async runTestClass(testClass: TestClassConstructor, testClassInstance: TestClassInstance): Promise<void> {
 		const addResult = (name: string, result: TestCaseResult) => {
 			let classResults = this.results.get(testClass);
 			if (classResults === undefined) classResults = this.results.set(testClass, {}).get(testClass)!;
@@ -105,7 +120,7 @@ export class TestRunner {
 		const runTestCase = async (callback: Callback, name: string): Promise<boolean> => {
 			const start = os.clock();
 			try {
-				await callback();
+				await callback(testClassInstance);
 			} catch (e) {
 				const timeElapsed = os.clock();
 				fail(e, name, { timeElapsed });
@@ -120,7 +135,7 @@ export class TestRunner {
 		const testList = this.getTestsFromTestClass(testClass);
 
 		testList.forEach(async (test) => {
-			const callback = <Callback>testClass[test.name];
+			const callback = <Callback>(testClass as unknown as TestClassType)[test.name];
 			await runTestCase(callback, test.name);
 		});
 	}
@@ -138,14 +153,11 @@ export class TestRunner {
 			const totalTimeElapsed = testResults.map(([_, val]) => val.timeElapsed).reduce((sum, n) => sum + n);
 
 			results.appendLine(
-				`[${getSymbol(allTestsPassed)}] ${testClass} (${math.round(totalTimeElapsed / 1000)}ms)`,
+				`[${getSymbol(allTestsPassed)}] ${testClass} (${math.round(totalTimeElapsed * 1000)}ms)`,
 			);
 
 			testResults.forEach((testResult, index) => {
 				const [testCaseName, testCase] = testResult;
-
-				const totalTimeElapsed = testCase.timeElapsed;
-				const allPassed = testCase.errorMessage === undefined;
 
 				const passed = testCase.errorMessage === undefined;
 				const timeElapsed = testCase.timeElapsed;
@@ -154,7 +166,7 @@ export class TestRunner {
 				results.append(" │");
 
 				results.appendLine(
-					`\t${isLast ? "└" : "├"}── [${getSymbol(passed)}] ${testCaseName} (${math.round(timeElapsed / 1000)}ms) ${!passed ? "FAILED" : ""}`,
+					`\t${isLast ? "└" : "├"}── [${getSymbol(passed)}] ${testCaseName} (${math.round(timeElapsed * 1000)}ms) ${!passed ? "FAILED" : ""}`,
 				);
 			});
 

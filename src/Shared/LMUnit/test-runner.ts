@@ -50,6 +50,8 @@ export class TestRunner {
 	}
 
 	private addClass(ctor: Constructor): void {
+		if (ctor === undefined || (ctor as unknown as { new: unknown }).new === undefined) return;
+
 		const testClass = <TestClassConstructor>ctor;
 		const newClass = <TestClassInstance>new ctor();
 

@@ -1,11 +1,8 @@
 import { LinkedList } from "Shared/Lib/DataStructures/LinkedList";
-import { Profile, Test, TestSuite } from "Shared/LMUnit/decorators";
+import { Test } from "Shared/LMUnit/decorators";
 import { Assert } from "Shared/LMUnit/assert";
 
-@TestSuite
 class TestLinkedList {
-	@Profile
-	@Test
 	public shouldCreateLinkedList() {
 		const linkedList = new LinkedList<number, number>();
 		for (let i = 0; i < 100000; i++) {
@@ -19,7 +16,6 @@ class TestLinkedList {
 		Assert.notUndefined(array);
 	}
 
-	@Test
 	public shouldClearLinkedList() {
 		const linkedList = new LinkedList<number, number>();
 		for (let i = 0; i < 100000; i++) {

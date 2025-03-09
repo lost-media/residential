@@ -1,11 +1,15 @@
-import { BeforeEach, BeforeAll, Test, AfterEach, AfterAll } from "Shared/LMUnit/decorators";
+import { LinkedList } from "Shared/Lib/DataStructures/LinkedList";
+import { BeforeEach, BeforeAll, Test, AfterEach, AfterAll, Test2 } from "Shared/LMUnit/decorators";
 
-class FuzzySearchTest {
-	@Test
+class TestTest {
 	testMethod() {}
 
-	@Test
-	testMethod2() {}
+	@Test2({ timeout: 1000 })
+	testMethod2() {
+		for (let i = 0; i < 10000000; i++) {
+			new LinkedList().add(i, i);
+		}
+	}
 
 	@BeforeEach
 	beforeEach() {
@@ -32,4 +36,4 @@ class FuzzySearchTest {
 	}
 }
 
-export = FuzzySearchTest;
+export = TestTest;

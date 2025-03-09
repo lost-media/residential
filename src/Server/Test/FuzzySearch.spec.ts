@@ -1,8 +1,7 @@
-import { Profile, Test, TestSuite } from "Shared/LMUnit/decorators";
+import { Test } from "Shared/LMUnit/decorators";
 import { Assert } from "Shared/LMUnit/assert";
 import { LinkedList } from "Shared/Lib/DataStructures/LinkedList";
 
-@TestSuite
 class FuzzySearchTest {
 	private something: boolean = false;
 
@@ -10,7 +9,6 @@ class FuzzySearchTest {
 		this.something = true;
 	}
 
-	@Test
 	public testMethod() {
 		Assert.equal(1, 1);
 		Assert.equal(2, 2);
@@ -19,14 +17,11 @@ class FuzzySearchTest {
 		Assert.true(this.something);
 	}
 
-	@Test
 	public testMethod2() {
 		Assert.equal(2, 2);
 		Assert.equal(5, 5);
 	}
 
-	@Test
-	@Profile
 	public testMethod3() {
 		Assert.equal(2, 2);
 	}

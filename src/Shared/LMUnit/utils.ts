@@ -1,4 +1,4 @@
-import { Annotation, Metadata, TestMethod } from "./common";
+import { Annotation, Metadata, TestMethod, TestAnnotationOptions } from "./common";
 
 export function flatten<T extends defined>(arr: (T | T[])[]): T[] {
 	const result: T[] = [];
@@ -25,19 +25,19 @@ export function setMetadata<T extends object, U>(ctor: T, data: Metadata, value:
 	ctorCast[data] = value;
 }
 
-export function addTest<T extends object>(ctor: T, testName: string, shouldProfile: boolean = false): void {
+export function addTest<T extends object>(ctor: T, testName: string, options: TestAnnotationOptions): void {
 	const ctorCast = <{ [key: string]: unknown }>ctor;
 	if (ctorCast[Metadata.TestList] !== undefined) {
 		const map = <Map<string, TestMethod>>ctorCast[Metadata.TestList];
 		map.set(testName, {
 			name: testName,
-			shouldProfile: map.get(testName)?.shouldProfile || shouldProfile,
+			options,
 		});
 	} else {
 		ctorCast[Metadata.TestList] = {
 			[testName]: {
 				name: testName,
-				shouldProfile: shouldProfile,
+				options,
 			},
 		};
 	}

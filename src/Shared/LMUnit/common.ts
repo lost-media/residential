@@ -1,6 +1,6 @@
 export type TestMethod = {
 	name: string;
-	shouldProfile: boolean;
+	options: TestAnnotationOptions;
 };
 
 export enum Annotation {
@@ -20,3 +20,7 @@ export const enum Metadata {
 
 export type Constructor<T = object> = new (...args: never[]) => T;
 export type AbstractConstructor<T = object> = abstract new (...args: never[]) => T;
+
+export type TestAnnotationOptions = {
+	timeout?: number;
+};

@@ -1,6 +1,6 @@
 import { getDescendantsOfType } from "@rbxts/instance-utility";
 import { flatten, getAnnotation, hasMetadata } from "./utils";
-import { Annotation, Constructor, Metadata, TestMethod } from "./common";
+import { Annotation, Constructor, Metadata, TestAnnotationOptions, TestMethod } from "./common";
 import { StringBuilder } from "@rbxts/string-builder";
 import Object from "@rbxts/object-utils";
 
@@ -25,7 +25,6 @@ interface TestCaseResult {
 
 interface TestRunOptions {
 	readonly reporter: (testResults: string) => void;
-	readonly colors: boolean;
 }
 
 export class TestRunner {
@@ -122,9 +121,13 @@ export class TestRunner {
 			});
 		};
 
-		const runTestCase = async (callback: Callback, name: string): Promise<boolean> => {
+		const runTestCase = async (
+			callback: Callback,
+			name: string,
+			options?: TestAnnotationOptions,
+		): Promise<boolean> => {
 			const start = os.clock();
-
+			const timeout = options?.timeout;
 			try {
 				await callback(testClassInstance);
 			} catch (e) {
@@ -134,6 +137,14 @@ export class TestRunner {
 			}
 
 			const timeElapsed = os.clock() - start;
+
+			if (timeout !== undefined) {
+				if (timeout < timeElapsed * 1000) {
+					fail(`Timed out after ${timeout}ms`, name, { timeElapsed });
+					return false;
+				}
+			}
+
 			pass(name, { timeElapsed });
 			return true;
 		};
@@ -145,7 +156,7 @@ export class TestRunner {
 			beforeEachCallbacks.forEach((callback) => callback(testClassInstance));
 
 			const callback = <Callback>(testClass as unknown as TestClassType)[test.name];
-			await runTestCase(callback, test.name);
+			runTestCase(callback, test.name, test.options);
 
 			const afterEachCallback = getAnnotation(testClass, Annotation.AfterEach);
 			afterEachCallback.forEach((callback) => callback(testClassInstance));

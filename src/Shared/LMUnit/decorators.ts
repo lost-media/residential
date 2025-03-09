@@ -1,27 +1,24 @@
-import { Annotation, Metadata } from "./common";
+import { Annotation, Metadata, TestAnnotationOptions } from "./common";
 import { setMetadata, addTest, addAnnotations } from "./utils";
-
-export function TestSuite<T extends object>(ctor: T): void {
-	if (ctor === undefined) throw "Target cannot be null";
-	setMetadata(ctor, Metadata.TestSuite, true);
-}
 
 export function Test<T extends object>(
 	ctor: T,
 	propertyKey: string,
-	_: TypedPropertyDescriptor<(this: T, ...args: void[]) => void>,
+	properties: TypedPropertyDescriptor<(this: T, ...args: void[]) => void>,
 ): void {
 	if (ctor === undefined) throw "Target cannot be null";
-	addTest(ctor, propertyKey);
+	addTest(ctor, propertyKey, {});
 }
 
-export function Profile<T extends object>(
-	ctor: T,
-	propertyKey: string,
-	_: TypedPropertyDescriptor<(this: T, ...args: void[]) => void>,
-): void {
-	if (ctor === undefined) throw "Target cannot be null";
-	addTest(ctor, propertyKey, true);
+export function Test2(options: TestAnnotationOptions) {
+	return function <T extends object>(
+		ctor: T,
+		propertyKey: string,
+		_: TypedPropertyDescriptor<(this: T, ...args: void[]) => void>,
+	): void {
+		if (ctor === undefined) throw "Target cannot be null";
+		addTest(ctor, propertyKey, options);
+	};
 }
 
 export function BeforeEach<T extends object>(

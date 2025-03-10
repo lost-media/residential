@@ -26,6 +26,8 @@ class FuzzySearchTest {
 
 	public testMethod3() {
 		Assert.equal(2, 2);
+
+		Assert.between(2, 2, 3, () => "");
 	}
 
 	public beforeEach(): void {}

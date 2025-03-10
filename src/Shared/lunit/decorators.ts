@@ -1,4 +1,4 @@
-import { Annotation, TestAnnotationOptions } from "./common";
+import { Annotation } from "./common";
 import { addTest, addAnnotations } from "./utils";
 
 export function Test<T extends object>(

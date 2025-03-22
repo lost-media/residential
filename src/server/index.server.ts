@@ -7,6 +7,12 @@ const TESTS_ENABLED = true;
 const serverTestsFolder = script.FindFirstChild("tests");
 const serverUnitTestsFolder = serverTestsFolder?.FindFirstChild("unit");
 
+const SERVICES_FOLDER = script.FindFirstChild("services");
+
+if (SERVICES_FOLDER !== undefined) {
+	KnitServer.AddServices(SERVICES_FOLDER);
+}
+
 KnitServer.Start()
 	.andThen(async () => {
 		LoggerFactory.getLogger().log("Server started", LogLevel.Info);

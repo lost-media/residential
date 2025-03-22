@@ -29,7 +29,7 @@ export function logLevelToString(logLevel: LogLevel): string {
 }
 
 export interface ILogger {
-	log(message: string, logLevel: LogLevel, scope?: string): void;
+	log(message: string, logLevel?: LogLevel, scope?: string): void;
 	format(message: string, logLevel: LogLevel, scope?: string): string;
 }
 

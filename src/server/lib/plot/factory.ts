@@ -8,16 +8,28 @@ class PlotFactory {
 
 	private constructor() {}
 
+	public static loadPlotsFromParent(parent: Instance) {
+		Assert.notUndefined(parent, () => `[PlotFactory:addPlotsFromParent]: Expected a defined parent instance`);
+
+		parent.GetChildren().forEach((instance) => {
+			PlotFactory.addPlot(instance);
+		});
+	}
+
+	public static count(): number {
+		return this.plots.size();
+	}
+
 	public static addPlot(plot: Instance): void {
 		// verify that the plot has the right structure before adding it to the array
 		Assert.notUndefined(
 			plot.FindFirstChild("Structures"),
-			() => `[PlotFactory]: Plot "${plot.Name}" does not have a folder called "Structures"`,
+			() => `[PlotFactory:addPlot]: Plot "${plot.Name}" does not have a folder called "Structures"`,
 		);
 
 		Assert.notUndefined(
 			plot.FindFirstChild("Tiles"),
-			() => `[PlotFactory]: Plot "${plot.Name}" does not have a folder called "Tiles"`,
+			() => `[PlotFactory:addPlot]: Plot "${plot.Name}" does not have a folder called "Tiles"`,
 		);
 
 		// don't add the plot again if it already exists
@@ -41,7 +53,7 @@ class PlotFactory {
 		if (plotToAdd !== undefined) {
 			return plotToAdd;
 		} else {
-			throw `[PlotFactory]: Unable to find an available plot for player ${player.Name}`;
+			throw `[PlotFactory:assignPlayer]: Unable to find an available plot for player ${player.Name}`;
 		}
 	}
 

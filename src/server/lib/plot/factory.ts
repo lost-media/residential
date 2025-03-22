@@ -31,7 +31,22 @@ class PlotFactory {
 	}
 
 	public static assignPlayer(player: Player): Optional<Plot> {
-		return undefined;
+		// first, check if the player is assigned. don't do anything if they are assigned
+		if (this.getPlayersPlot(player) !== undefined) {
+			return;
+		}
+
+		const plotToAdd = this.plots.find((_, plot) => plot.isAssigned() === false);
+
+		if (plotToAdd !== undefined) {
+			return plotToAdd;
+		} else {
+			throw `[PlotFactory]: Unable to find an available plot for player ${player.Name}`;
+		}
+	}
+
+	private static getPlayersPlot(player: Player): Optional<Plot> {
+		return this.plots.find((_, plot) => plot.getPlayer() === player);
 	}
 }
 

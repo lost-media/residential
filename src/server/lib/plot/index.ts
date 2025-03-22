@@ -23,6 +23,10 @@ export default class Plot {
 		this.player = player;
 	}
 
+	public getPlayer(): Optional<Player> {
+		return this.player;
+	}
+
 	public isAssigned(): boolean {
 		return this.player !== undefined;
 	}

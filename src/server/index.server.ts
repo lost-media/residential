@@ -1,6 +1,5 @@
 import { KnitServer } from "@rbxts/knit";
 import LoggerFactory, { LogLevel } from "shared/util/Logger/Factory";
-import { promisify } from "@rbxts/knit/Knit/Util/Promise";
 import { TestRunner } from "@rbxts/lunit";
 
 const TESTS_ENABLED = true;

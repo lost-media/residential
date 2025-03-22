@@ -1,11 +1,11 @@
 import { KnitServer } from "@rbxts/knit";
 import LoggerFactory, { LogLevel } from "shared/util/Logger/Factory";
 import { promisify } from "@rbxts/knit/Knit/Util/Promise";
-import { TestRunner } from "shared/lunit/test-runner";
+import { TestRunner } from "@rbxts/lunit";
 
 const TESTS_ENABLED = true;
 
-const testFolder = script.FindFirstChild("Test");
+const testFolder = script.FindFirstChild("tests");
 
 KnitServer.Start()
 	.andThen(async () => {
@@ -14,19 +14,14 @@ KnitServer.Start()
 		if (TESTS_ENABLED) {
 			LoggerFactory.getLogger().log("Running tests...", LogLevel.Info);
 			// Run tests here
-			if (testFolder) {
-				promisify(async () => {
-					const testRunner = new TestRunner(testFolder);
-
-					await testRunner.run();
-				})()
-					.then(() => {
-						LoggerFactory.getLogger().log("Tests complete", LogLevel.Info);
-					})
-					.catch((e) => {
-						LoggerFactory.getLogger().log(`Failed to run tests: ${e}`, LogLevel.Error);
-					});
+			if (testFolder !== undefined) {
+				const testRunner = new TestRunner([testFolder]);
+				await testRunner.run().catch((e) => {
+					LoggerFactory.getLogger().log(`Failed to run tests: ${e}`, LogLevel.Error);
+				});
 			}
+
+			LoggerFactory.getLogger().log("Tests complete", LogLevel.Info);
 		}
 	})
 	.catch((e) => {

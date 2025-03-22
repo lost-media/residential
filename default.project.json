@@ -5,8 +5,8 @@
 		"$className": "DataModel",
 		"ServerScriptService": {
 			"$className": "ServerScriptService",
-			"Server": {
-				"$path": "out/Server"
+			"server": {
+				"$path": "out/server"
 			}
 		},
 		"ReplicatedStorage": {
@@ -20,19 +20,19 @@
 					}
 				}
 			},
-			"Shared": {
-				"$path": "out/Shared"
+			"shared": {
+				"$path": "out/shared"
 			},
-			"Models": {
-				"$path": "out/Models"
+			"models": {
+				"$path": "out/models"
 			}
 		},
 		"StarterPlayer": {
 			"$className": "StarterPlayer",
 			"StarterPlayerScripts": {
 				"$className": "StarterPlayerScripts",
-				"Client": {
-					"$path": "out/Client"
+				"client": {
+					"$path": "out/client"
 				}
 			}
 		},

@@ -1,4 +1,4 @@
-import { ReplicatedStorage } from "@rbxts/services";
+import { MODELS_FOLDER } from "shared/lib/Residential/configs";
 import { Koins } from "shared/lib/Residential/Currency";
 import { IStructure } from "shared/lib/Residential/types";
 
@@ -7,7 +7,7 @@ const structure: IStructure = {
 
 	name: "Intersection",
 	description: "An intersection.",
-	model: ReplicatedStorage.Models.Road.FindFirstChild("NormalRoad") as Model,
+	model: MODELS_FOLDER?.Road.FindFirstChild("NormalRoad") as Model,
 
 	price: {
 		value: 100,

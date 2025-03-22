@@ -4,3 +4,7 @@ interface ReplicatedStorage extends Instance {
 		Residential: Folder;
 	};
 }
+
+interface Workspace extends Instance {
+	Plots: Folder;
+}

@@ -38,5 +38,7 @@ export interface IStructureInstance {
 	model?: Model;
 
 	spawn(): Model;
+	spawn(parent?: Instance): Model;
+
 	destroy(): void;
 }

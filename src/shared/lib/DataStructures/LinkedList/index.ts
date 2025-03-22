@@ -18,6 +18,7 @@ export interface ILinkedList<K extends defined, V extends defined> {
 	size(): number;
 	clear(): void;
 
+	contains(key: K): boolean;
 	forEach(callback: (key: K, value: V) => void): void;
 	map<T extends defined>(callback: (key: K, value: V) => T): Array<T>;
 	filter(callback: (key: K, value: V) => boolean): Array<V>;
@@ -153,6 +154,10 @@ export class LinkedList<K extends defined, V extends defined> implements ILinked
 		}
 
 		return undefined;
+	}
+
+	public contains(key: K): boolean {
+		return this.find((_key) => _key === key) !== undefined;
 	}
 
 	public toArray(): Array<V> {

@@ -17,8 +17,15 @@ abstract class StructureInstance implements IStructureInstance {
 		}
 	}
 
-	public spawn(): Model {
-		return this.structure.model.Clone();
+	public spawn(): Model;
+	public spawn(parent?: Instance): Model {
+		const res = this.structure.model.Clone();
+
+		if (parent !== undefined) {
+			res.Parent = parent;
+		}
+
+		return res;
 	}
 }
 

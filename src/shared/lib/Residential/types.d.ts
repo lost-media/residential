@@ -30,3 +30,13 @@ export interface IStructureCategory {
 	getStructuresWithinPrice(price: number): IStructure[];
 	getSearchResults(query: string): IStructure[];
 }
+
+export interface IStructureInstance {
+	// a unique identifier
+	uuid: string;
+	structure: IStructure;
+	model?: Model;
+
+	spawn(): Model;
+	destroy(): void;
+}

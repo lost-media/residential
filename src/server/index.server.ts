@@ -1,5 +1,5 @@
 import { KnitServer } from "@rbxts/knit";
-import LoggerFactory, { LogLevel } from "shared/util/Logger/Factory";
+import LoggerFactory, { LogLevel } from "shared/util/logger/factory";
 import { TestRunner } from "@rbxts/lunit";
 
 const TESTS_ENABLED = true;

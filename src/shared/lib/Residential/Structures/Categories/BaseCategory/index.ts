@@ -1,5 +1,5 @@
 import { IStructureCategory, IStructure } from "shared/lib/Residential/types";
-import fuzzySearch from "shared/util/FuzzySearch";
+import fuzzySearch from "shared/util/fuzzy-search";
 
 abstract class BaseCategory implements IStructureCategory {
 	abstract id: string;

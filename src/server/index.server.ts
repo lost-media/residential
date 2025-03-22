@@ -4,7 +4,8 @@ import { TestRunner } from "@rbxts/lunit";
 
 const TESTS_ENABLED = true;
 
-const testFolder = script.FindFirstChild("tests");
+const serverTestsFolder = script.FindFirstChild("tests");
+const serverUnitTestsFolder = serverTestsFolder?.FindFirstChild("unit");
 
 KnitServer.Start()
 	.andThen(async () => {
@@ -13,8 +14,8 @@ KnitServer.Start()
 		if (TESTS_ENABLED) {
 			LoggerFactory.getLogger().log("Running tests...", LogLevel.Info);
 			// Run tests here
-			if (testFolder !== undefined) {
-				const testRunner = new TestRunner([testFolder]);
+			if (serverUnitTestsFolder !== undefined) {
+				const testRunner = new TestRunner([serverUnitTestsFolder]);
 				await testRunner.run().catch((e) => {
 					LoggerFactory.getLogger().log(`Failed to run tests: ${e}`, LogLevel.Error);
 				});

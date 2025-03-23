@@ -28,5 +28,7 @@
 		"paths": {
 			"shared/*": ["./shared/*"]
 		}
-	}
+	},
+
+	"exclude": ["tools"]
 }

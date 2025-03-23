@@ -12,7 +12,7 @@ export enum Platform {
 	PC,
 }
 
-interface ModelSettings {
+export interface ModelSettings {
 	canStack: boolean;
 	radius?: number;
 	frontSurface: Enum.NormalId;

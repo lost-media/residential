@@ -1,9 +1,12 @@
-import { ClientRemoteSignal, KnitClient, Signal } from "@rbxts/knit";
+import { KnitClient, Signal } from "@rbxts/knit";
 
 const PlotController = KnitClient.CreateController({
 	Name: "PlotController",
 
-	plotAssigned: new Signal<(plot: PlotInstance) => void>(),
+	// Signals
+	signals: {
+		plotAssigned: new Signal<(plot: PlotInstance) => void>(),
+	},
 
 	plot: undefined as Optional<PlotInstance>,
 
@@ -17,7 +20,7 @@ const PlotController = KnitClient.CreateController({
 		const plotAssignedCallback = (plot: PlotInstance) => {
 			this.plot = plot;
 			plotAssignedConnection.Disconnect();
-			this.plotAssigned.Fire(plot);
+			this.signals.plotAssigned.Fire(plot);
 		};
 
 		const plotAssignedConnection = plotService.PlotAssigned.Connect(plotAssignedCallback);
@@ -28,7 +31,7 @@ const PlotController = KnitClient.CreateController({
 			if (this.plot !== undefined) {
 				resolve(this.plot);
 			} else {
-				const [res] = this.plotAssigned.Wait();
+				const [res] = this.signals.plotAssigned.Wait();
 				resolve(res);
 			}
 		});

@@ -11,7 +11,6 @@ const PlacementController = Knit.CreateController({
 		const plotController = Knit.GetController("PlotController");
 		const plot = await plotController.getPlotAsync();
 
-		print(plot);
 		this.placementClient = new PlacementClient(plot);
 		this.placementClient.initiatePlacement(chooseRandomStructure()?.model.Clone());
 	},

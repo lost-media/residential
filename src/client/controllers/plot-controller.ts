@@ -1,25 +1,37 @@
-import { ClientRemoteSignal, KnitClient } from "@rbxts/knit";
-import Plot from "shared/lib/plot";
+import { ClientRemoteSignal, KnitClient, Signal } from "@rbxts/knit";
 
 const PlotController = KnitClient.CreateController({
 	Name: "PlotController",
 
-	plot: undefined as Optional<Plot>,
+	plotAssigned: new Signal<(plot: PlotInstance) => void>(),
+
+	plot: undefined as Optional<PlotInstance>,
 
 	KnitStart() {
-		const plotService = KnitClient.GetService("PlotService");
-		let plotAssignedConnection: Optional<ClientRemoteSignal.Connection> =
-			undefined as unknown as ClientRemoteSignal.Connection;
+		this.listenForPlotAssignCallback();
+	},
 
-		const plotAssignedCallback = (plot: Plot) => {
+	listenForPlotAssignCallback(): void {
+		const plotService = KnitClient.GetService("PlotService");
+
+		const plotAssignedCallback = (plot: PlotInstance) => {
 			this.plot = plot;
-			print(plot);
-			if (plotAssignedConnection) {
-				plotAssignedConnection.Disconnect();
-			}
+			plotAssignedConnection.Disconnect();
+			this.plotAssigned.Fire(plot);
 		};
 
-		plotAssignedConnection = plotService.PlotAssigned.Connect(plotAssignedCallback);
+		const plotAssignedConnection = plotService.PlotAssigned.Connect(plotAssignedCallback);
+	},
+
+	getPlotAsync(): Promise<PlotInstance> {
+		return new Promise((resolve) => {
+			if (this.plot !== undefined) {
+				resolve(this.plot);
+			} else {
+				const [res] = this.plotAssigned.Wait();
+				resolve(res);
+			}
+		});
 	},
 });
 

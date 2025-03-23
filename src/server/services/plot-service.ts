@@ -1,14 +1,13 @@
 import { KnitServer as Knit, RemoteSignal } from "@rbxts/knit";
 import { Workspace } from "@rbxts/services";
-import Plot from "shared/lib/plot";
-import PlotFactory from "shared/lib/plot/factory";
+import PlotFactory from "server/lib/plot/factory";
 import LoggerFactory, { LogLevel } from "shared/util/logger/factory";
 
 const PlotService = Knit.CreateService({
 	Name: "PlotService",
 
 	Client: {
-		PlotAssigned: new RemoteSignal<(plot: Plot) => void>(),
+		PlotAssigned: new RemoteSignal<(plot: PlotInstance) => void>(),
 	},
 
 	KnitInit() {
@@ -32,7 +31,7 @@ const PlotService = Knit.CreateService({
 				const plot = PlotFactory.assignPlayer(player);
 
 				if (plot !== undefined) {
-					this.Client.PlotAssigned.Fire(player, plot);
+					this.Client.PlotAssigned.Fire(player, plot.getInstance());
 					LoggerFactory.getLogger().log(`Assigned Player "${player.Name}" to a plot`, LogLevel.Info);
 				}
 			} catch (e) {

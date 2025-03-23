@@ -1,7 +1,6 @@
 import { Assert } from "@rbxts/lunit";
 import { LinkedList } from "shared/lib/data-structures/linked-list";
 import { IStructureInstance } from "shared/lib/residential/types";
-import { PlotInstance } from "./types";
 
 export default class Plot {
 	private player?: Player;
@@ -25,6 +24,10 @@ export default class Plot {
 
 	public getPlayer(): Optional<Player> {
 		return this.player;
+	}
+
+	public getInstance(): PlotInstance {
+		return this.instance;
 	}
 
 	public isAssigned(): boolean {

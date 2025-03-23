@@ -361,11 +361,15 @@ class PlacementClient {
 
 		if (SETTINGS.PLACEMENT_CONFIGS.bools.moveByGrid === true) {
 			const relativeCFrame = platformCFrame.Inverse().mul(positionCFrame);
-			const snappedRelativeCFrame = this.getSnappedCFrame(relativeCFrame).mul(new CFrame(offsetX, 0, offsetZ));
+			let snappedRelativeCFrame = this.getSnappedCFrame(relativeCFrame).mul(new CFrame(offsetX, 0, offsetZ));
+
+			// snap the model to the bounds of the platform
+			snappedRelativeCFrame = this.clampToBounds(platform, snappedRelativeCFrame, sizeX, sizeZ);
 
 			finalC = platformCFrame.mul(snappedRelativeCFrame);
 		} else {
 			finalC = platformCFrame.Inverse().mul(positionCFrame);
+			finalC = this.clampToBounds(platform, finalC, sizeX, sizeZ);
 			finalC = platformCFrame.mul(finalC);
 		}
 
@@ -399,6 +403,17 @@ class PlacementClient {
 	private calculateYPosition(tp: number, ts: number, o: number, normal: number): number {
 		if (normal === 0) return tp + ts * 0.5 - o * 0.5;
 		else return tp + ts * 0.5 + o * 0.5;
+	}
+
+	private clampToBounds(platform: BasePart, cframe: CFrame, offsetX: number, offsetZ: number): CFrame {
+		const pos: CFrame = platform.CFrame;
+		const xBound: number = platform.Size.X * 0.5 - offsetX;
+		const zBound: number = platform.Size.Z * 0.5 - offsetZ;
+
+		const newX: number = math.clamp(cframe.X, -xBound, xBound);
+		const newZ: number = math.clamp(cframe.Z, -zBound, zBound);
+
+		return new CFrame(newX, 0, newZ);
 	}
 }
 

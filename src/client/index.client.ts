@@ -1,7 +1,11 @@
 import { KnitClient } from "@rbxts/knit";
 import LoggerFactory, { LogLevel } from "shared/util/logger/factory";
 
-KnitClient.AddControllers(script.FindFirstChild("controllers") as Instance);
+const CONTROLLERS_FOLDER = script.FindFirstChild("controllers");
+
+if (CONTROLLERS_FOLDER !== undefined) {
+	KnitClient.AddControllers(CONTROLLERS_FOLDER);
+}
 
 KnitClient.Start()
 	.then(() => {

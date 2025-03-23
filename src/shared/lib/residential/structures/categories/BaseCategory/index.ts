@@ -25,7 +25,7 @@ abstract class BaseCategory implements IStructureCategory {
 		const results: Array<IStructure> = new Array<IStructure>();
 
 		this.structures.forEach((structure) => {
-			if (fuzzySearch(query, structure.name + structure.description + structure.id)) {
+			if (fuzzySearch(query, structure.name + structure.description + structure.id)[0] !== undefined) {
 				results.push(structure);
 			}
 		});

@@ -1,6 +1,6 @@
 import type { IStructureCategory } from "shared/lib/residential/types";
-import { loadStructures } from "shared/lib/residential/Structures/Utils/LoadStructures";
-import BaseCategory from "../BaseCategory";
+import { loadStructures } from "shared/lib/residential/structures/utils/load-structures";
+import BaseCategory from "shared/lib/residential/structures/categories/BaseCategory";
 
 class ResidentialCategory extends BaseCategory implements IStructureCategory {
 	id = "residential" as const;

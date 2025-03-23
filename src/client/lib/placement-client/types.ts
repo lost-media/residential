@@ -14,6 +14,6 @@ export enum Platform {
 
 export interface ModelSettings {
 	canStack: boolean;
-	radius?: number;
+	radius: number;
 	frontSurface: Enum.NormalId;
 }

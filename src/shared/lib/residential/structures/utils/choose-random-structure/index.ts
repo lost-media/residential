@@ -7,7 +7,9 @@ export function chooseRandomStructure(): Optional<IStructure> {
 	let structure: Optional<IStructure> = undefined;
 	StructureCategories.forEach((_, val) => {
 		val.structures.forEach((_structure) => {
-			structure = _structure;
+			if (_structure.id === "road-normal") {
+				structure = _structure;
+			}
 		});
 	});
 

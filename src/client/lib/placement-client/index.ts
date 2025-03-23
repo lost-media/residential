@@ -22,6 +22,7 @@ const SETTINGS = {
 			gridSize: 4,
 			maxRaycastRange: 999, // in studs
 			maxHeight: 999,
+			targetFps: 60,
 		},
 
 		// floats
@@ -57,8 +58,10 @@ class PlacementClientStateMachine {
 	private yLevel: number = 0;
 	private rotation: number = 0;
 	private initialYPosition: number = 0;
+	private hitbox: BasePart | undefined;
 
 	// signals
+	public onHitboxChanged = new Signal<(hitbox?: BasePart) => void>();
 	public onGridSizeChanged = new Signal<(gridSize?: number) => void>();
 	public onModelChanged = new Signal<(model?: Model) => void>();
 	public onLevelChanged = new Signal<(level: number) => void>();
@@ -69,6 +72,15 @@ class PlacementClientStateMachine {
 
 	// can't make objects of this class
 	constructor() {}
+
+	public getHitbox(): Optional<BasePart> {
+		return this.hitbox;
+	}
+
+	public setHitbox(hitbox: BasePart) {
+		this.hitbox = hitbox;
+		this.onHitboxChanged.Fire(hitbox);
+	}
 
 	public getInitialYPosition(): number {
 		return this.initialYPosition;
@@ -197,12 +209,25 @@ class PlacementClient {
 		// set the primary part's hitbox transparency
 		model.PrimaryPart.Transparency = SETTINGS.PLACEMENT_CONFIGS.floats.hitboxTransparency;
 
+		// set up the hitbox
+		const hitbox = this.janitor.clone(model.PrimaryPart);
+		hitbox.ClearAllChildren();
+		this.stateMachine.setHitbox(hitbox);
+
+		hitbox.Transparency = 1;
+		hitbox.Name = "Hitbox";
+		hitbox.Parent = model;
+
+		model.PrimaryPart.Anchored = false;
+
 		this.state = PlacementState.MOVING;
 
 		this.stateMachine.setPlacementInitialized(true);
 		this.stateMachine.setinitialYPosition(
 			this.calculateYPosition(platform.Position.Y, platform.Size.Y, model.PrimaryPart.Size.Y, 1),
 		);
+
+		model.Parent = Workspace;
 
 		this.janitor.bindToRenderStep("Input", Enum.RenderPriority.Input.Value, (dt) => this.translateObject(dt));
 	}
@@ -231,24 +256,30 @@ class PlacementClient {
 	private translateObject(dt: number) {
 		// This function should be as optimized as possible because it runs every frame
 		const model = this.stateMachine.getModel();
+		const hitbox = this.stateMachine.getHitbox();
 
 		if (this.state === PlacementState.PLACING || this.state === PlacementState.INACTIVE) return;
+		if (model === undefined) return;
+		if (hitbox === undefined) return;
 
-		const modelPrimaryPart = model?.PrimaryPart;
+		const modelPrimaryPart = model.PrimaryPart;
 		if (modelPrimaryPart === undefined) return;
 
 		if (this.stateMachine.getPlacementInitialized() === false) return;
 
-		const calculatedPosition = this.calculateModelCFrame();
+		const calculatedPosition = this.calculateModelCFrame(modelPrimaryPart.CFrame);
 
 		if (SETTINGS.PLACEMENT_CONFIGS.bools.interpolate === true) {
-			modelPrimaryPart.CFrame.Lerp(calculatedPosition, 1);
+			const SPEED = 1;
+			model.PivotTo(
+				hitbox.CFrame.Lerp(calculatedPosition, SPEED * dt * SETTINGS.PLACEMENT_CONFIGS.integers.targetFps),
+			);
 		} else {
 			model?.PivotTo(calculatedPosition);
 		}
 	}
 
-	private calculateModelCFrame(): CFrame {
+	private calculateModelCFrame(lastCFrame: CFrame): CFrame {
 		const RAY_RANGE = 10000;
 
 		const isRotated = this.stateMachine.getIsRotated();

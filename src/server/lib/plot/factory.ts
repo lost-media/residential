@@ -27,8 +27,8 @@ class PlotFactory {
 		);
 
 		Assert.notUndefined(
-			plot.FindFirstChild("Tiles"),
-			() => `[PlotFactory:addPlot]: Plot "${plot.Name}" does not have a folder called "Tiles"`,
+			plot.FindFirstChild("Platform"),
+			() => `[PlotFactory:addPlot]: Plot "${plot.Name}" does not have a folder called "Platform"`,
 		);
 
 		// don't add the plot again if it already exists

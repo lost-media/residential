@@ -1,5 +1,5 @@
 import { Assert, Decorators } from "@rbxts/lunit";
-import { StructureCategories } from "shared/lib/Residential/Structures";
+import { StructureCategories } from "shared/lib/residential/Structures";
 
 @Decorators.Tag("Library")
 class TestStructureLibrary {

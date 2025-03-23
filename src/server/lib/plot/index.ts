@@ -1,6 +1,6 @@
 import { Assert } from "@rbxts/lunit";
-import { LinkedList } from "shared/lib/DataStructures/LinkedList";
-import { IStructureInstance } from "shared/lib/Residential/types";
+import { LinkedList } from "shared/lib/data-structures/linked-list";
+import { IStructureInstance } from "shared/lib/residential/types";
 import { PlotInstance } from "./types";
 
 export default class Plot {

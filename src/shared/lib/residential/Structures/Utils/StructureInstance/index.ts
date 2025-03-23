@@ -1,4 +1,4 @@
-import type { IStructure, IStructureInstance } from "shared/lib/Residential/types";
+import type { IStructure, IStructureInstance } from "shared/lib/residential/types";
 
 abstract class StructureInstance implements IStructureInstance {
 	public uuid: string;

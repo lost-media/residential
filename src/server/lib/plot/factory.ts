@@ -1,6 +1,6 @@
 import { Assert } from "@rbxts/lunit";
 import Plot from ".";
-import { LinkedList } from "shared/lib/DataStructures/LinkedList";
+import { LinkedList } from "shared/lib/data-structures/linked-list";
 import { PlotInstance } from "./types";
 
 class PlotFactory {

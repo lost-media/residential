@@ -1,6 +1,5 @@
-import { IStructure } from "shared/lib/Residential/types";
+import { IStructure } from "shared/lib/residential/types";
 import { LoadChildren } from "@rbxts/knit/Knit/Util/Loader";
-import { ReplicatedStorage } from "@rbxts/services";
 
 export const FOLDER_NAME = "Structures";
 

@@ -1,5 +1,5 @@
 import BaseCategory from "../BaseCategory";
-import type { IStructureCategory } from "shared/lib/Residential/types";
+import type { IStructureCategory } from "shared/lib/residential/types";
 import { loadStructures } from "../../Utils/LoadStructures";
 
 class RoadCategory extends BaseCategory implements IStructureCategory {

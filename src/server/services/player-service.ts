@@ -1,6 +1,6 @@
 import { KnitServer as Knit } from "@rbxts/knit";
 import { Players } from "@rbxts/services";
-import { LinkedList } from "shared/lib/DataStructures/LinkedList";
+import { LinkedList } from "shared/lib/data-structures/linked-list";
 
 const PlayerService = Knit.CreateService({
 	Name: "PlayerService",

@@ -1,5 +1,5 @@
-import { Koins } from "shared/lib/Residential/Currency";
-import { IStructure } from "shared/lib/Residential/types";
+import { Koins } from "shared/lib/residential/Currency";
+import { IStructure } from "shared/lib/residential/types";
 
 const structure: IStructure = {
 	id: "residential-small-house",

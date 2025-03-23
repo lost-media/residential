@@ -1,4 +1,4 @@
-import { LinkedList } from "shared/lib/DataStructures/LinkedList";
+import { LinkedList } from "shared/lib/data-structures/linked-list";
 import { Assert, Decorators } from "@rbxts/lunit";
 
 @Decorators.Tag("Library")

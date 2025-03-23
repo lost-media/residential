@@ -1,6 +1,6 @@
-import { MODELS_FOLDER } from "shared/lib/Residential/configs";
-import { Koins } from "shared/lib/Residential/Currency";
-import { IStructure } from "shared/lib/Residential/types";
+import { MODELS_FOLDER } from "shared/lib/residential/configs";
+import { Koins } from "shared/lib/residential/Currency";
+import { IStructure } from "shared/lib/residential/types";
 
 const structure: IStructure = {
 	id: "road-t-intersection",

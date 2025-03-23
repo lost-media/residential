@@ -5,10 +5,26 @@ import { LinkedList } from "shared/lib/data-structures/linked-list";
 const PlayerService = Knit.CreateService({
 	Name: "PlayerService",
 
-	onPlayerJoinedEvents: new LinkedList<defined, RBXScriptConnection>(),
-	onPlayerLeavingEvents: new LinkedList<defined, RBXScriptConnection>(),
+	onPlayerJoinedCallbacks: new Array<(player: Player) => void>(),
+	onPlayerLeavingCallbacks: new Array<(player: Player) => void>(),
 
-	addPlayerJoinConnection<K extends defined>(key: K, callback: (player: Player) => void): void {
+	onPlayerJoinedConnection: undefined as unknown as RBXScriptConnection,
+	onPlayerLeavingConnection: undefined as unknown as RBXScriptConnection,
+
+	KnitInit() {
+		this.onPlayerJoinedConnection = Players.PlayerAdded.Connect((player) => {
+			this.onPlayerJoinedCallbacks.forEach((callback) => {
+				callback(player);
+			});
+		});
+		this.onPlayerLeavingConnection = Players.PlayerRemoving.Connect((player) => {
+			this.onPlayerLeavingCallbacks.forEach((callback) => {
+				callback(player);
+			});
+		});
+	},
+
+	addPlayerJoinConnection(callback: (player: Player) => void): void {
 		// If there are players in the server before the event begins, call the callback for each player
 		spawn(() => {
 			Players.GetPlayers().forEach((player) => {
@@ -16,20 +32,11 @@ const PlayerService = Knit.CreateService({
 			});
 		});
 
-		const signal = Players.PlayerAdded.Connect(callback);
-		this.onPlayerJoinedEvents.add(key, signal);
+		this.onPlayerJoinedCallbacks.push(callback);
 	},
 
-	addPlayerLeavingConnection<K extends defined>(key: K, callback: (player: Player) => void): void {
-		this.onPlayerLeavingEvents.add(key, Players.PlayerRemoving.Connect(callback));
-	},
-
-	removePlayerJoinConnection<K extends defined>(key: K): void {
-		this.onPlayerJoinedEvents.remove(key);
-	},
-
-	removePlayerLeavingConnection<K extends defined>(key: K): void {
-		this.onPlayerJoinedEvents.remove(key);
+	addPlayerLeavingConnection<K extends defined>(callback: (player: Player) => void): void {
+		this.onPlayerLeavingCallbacks.push(callback);
 	},
 });
 

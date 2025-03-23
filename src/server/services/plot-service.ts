@@ -22,7 +22,7 @@ const PlotService = Knit.CreateService({
 
 	KnitStart() {
 		const playerService = Knit.GetService("PlayerService");
-		playerService.addPlayerJoinConnection(1, (player: Player) => {
+		playerService.addPlayerJoinConnection((player: Player) => {
 			try {
 				PlotFactory.assignPlayer(player);
 				LoggerFactory.getLogger().log(`Assigned Player "${player.Name}" to a plot`, LogLevel.Info);

@@ -1,4 +1,4 @@
-import { Koins } from "shared/lib/residential/Currency";
+import { Koins } from "shared/lib/residential/currency";
 import { IStructure } from "shared/lib/residential/types";
 import { MODELS_FOLDER } from "shared/lib/residential/configs";
 const structure: IStructure = {

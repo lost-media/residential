@@ -17,9 +17,9 @@ const PlacementController = Knit.CreateController({
 		this.placeModel();
 
 		spawn(() => {
-			for (let i = 0; i < 10000; i++) {
+			for (let i = 0; i < 50; i++) {
 				print(this.placementClient.getRenderLoopAverageTime());
-				task.wait(0.5);
+				task.wait(5);
 			}
 		});
 	},

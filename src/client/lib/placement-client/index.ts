@@ -67,6 +67,7 @@ class PlacementClientSignals {
 
 class PlacementClientStateMachine {
 	// states
+	private angleAmplitude: number = SETTINGS.PLACEMENT_CONFIGS.floats.angleTiltAmplitude;
 	private gridSize: number = SETTINGS.PLACEMENT_CONFIGS.integers.gridSize;
 	private isRotated: boolean = false;
 	private placementInitialized: boolean = false;
@@ -77,6 +78,7 @@ class PlacementClientStateMachine {
 	private hitbox: BasePart | undefined;
 
 	// signals
+	public onAngleAmplitudeChanged = new Signal<(amplitude: number) => void>();
 	public onHitboxChanged = new Signal<(hitbox?: BasePart) => void>();
 	public onGridSizeChanged = new Signal<(gridSize?: number) => void>();
 	public onModelChanged = new Signal<(model?: Model) => void>();
@@ -90,6 +92,7 @@ class PlacementClientStateMachine {
 	constructor() {}
 
 	public reset() {
+		this.angleAmplitude = SETTINGS.PLACEMENT_CONFIGS.floats.angleTiltAmplitude;
 		this.isRotated = false;
 		this.rotation = 0;
 		this.placementInitialized = false;
@@ -99,6 +102,15 @@ class PlacementClientStateMachine {
 
 		this.hitbox?.Destroy();
 		this.hitbox = undefined;
+	}
+
+	public getAngleAmplitude(): number {
+		return this.angleAmplitude;
+	}
+
+	public setAngleAmplitude(angleAmplitude: number) {
+		this.angleAmplitude = angleAmplitude;
+		this.onAngleAmplitudeChanged.Fire(angleAmplitude);
 	}
 
 	public getHitbox(): Optional<BasePart> {
@@ -402,10 +414,12 @@ class PlacementClient {
 
 	private translateObject(dt: number) {
 		// This function should be as optimized as possible because it runs every frame
+		if (this.state === PlacementState.PLACING || this.state === PlacementState.INACTIVE) return;
+		if (this.stateMachine.getPlacementInitialized() === false) return;
+
 		const model = this.stateMachine.getModel();
 		const hitbox = this.stateMachine.getHitbox();
 
-		if (this.state === PlacementState.PLACING || this.state === PlacementState.INACTIVE) return;
 		if (model === undefined) return;
 		if (hitbox === undefined) return;
 
@@ -413,18 +427,17 @@ class PlacementClient {
 		if (modelPrimaryPart === undefined) return;
 
 		// Update collisions
-		this.updateHitboxCollisions();
-		this.updateHitboxColor();
-
-		if (this.stateMachine.getPlacementInitialized() === false) return;
+		if (SETTINGS.PLACEMENT_CONFIGS.bools.enableCollisions === true) {
+			this.updateHitboxCollisions();
+			this.updateHitboxColor();
+		}
 
 		const calculatedPosition = this.calculateModelCFrame(modelPrimaryPart.CFrame);
 
 		if (SETTINGS.PLACEMENT_CONFIGS.bools.interpolate === true) {
 			const SPEED = 1;
-			model.PivotTo(
-				hitbox.CFrame.Lerp(calculatedPosition, SPEED * dt * SETTINGS.PLACEMENT_CONFIGS.integers.targetFps),
-			);
+			const lerpFactor = SPEED * dt * SETTINGS.PLACEMENT_CONFIGS.integers.targetFps;
+			model.PivotTo(hitbox.CFrame.Lerp(calculatedPosition, lerpFactor));
 		} else {
 			model?.PivotTo(calculatedPosition);
 		}
@@ -439,7 +452,7 @@ class PlacementClient {
 		const initialY = this.stateMachine.getInitialYPosition();
 
 		const modelPrimaryPart = model?.PrimaryPart as BasePart;
-		const platform = this.plot.FindFirstChild(PLATFORM_INSTANCE_NAME) as BasePart | undefined;
+		const platform = this.getPlatformBasePart();
 
 		if (platform === undefined) {
 			return new CFrame();
@@ -450,7 +463,6 @@ class PlacementClient {
 		const camera = Workspace.CurrentCamera ?? new Instance("Camera");
 		Workspace.CurrentCamera = camera;
 
-		let x: number, y: number, z: number;
 		let sizeX: number = modelPrimaryPart.Size.X * 0.5;
 		let sizeZ: number = modelPrimaryPart.Size.Z * 0.5;
 
@@ -460,8 +472,7 @@ class PlacementClient {
 		let finalC: CFrame;
 
 		if (isRotated === false) {
-			sizeX = modelPrimaryPart.Size.Z * 0.5;
-			sizeZ = modelPrimaryPart.Size.X * 0.5;
+			[sizeX, sizeZ] = [sizeZ, sizeX];
 		}
 
 		if (SETTINGS.PLACEMENT_CONFIGS.bools.moveByGrid) {
@@ -469,11 +480,8 @@ class PlacementClient {
 			offsetZ = sizeZ - math.floor(sizeZ / gridSize) * gridSize;
 		}
 
-		let ray: RaycastResult | undefined, nilRay: Vector3;
+		let ray: RaycastResult | undefined, nilRay: Vector3, unit: Optional<Ray>;
 		let target: Instance;
-
-		const mouseLocation = this.mouse.getPosition();
-		const mouseRay = camera.ViewportPointToRay(mouseLocation.X, mouseLocation.Y, 5);
 
 		if (this.getPlatform() === Platform.MOBILE) {
 			const cameraPosition = camera.CFrame.Position;
@@ -486,7 +494,7 @@ class PlacementClient {
 		} else {
 			// Not on Mobile
 			const mouseLocation = this.mouse.getPosition();
-			const unit = camera.ViewportPointToRay(mouseLocation.X, mouseLocation.Y, 0);
+			unit = camera.ViewportPointToRay(mouseLocation.X, mouseLocation.Y, 0);
 
 			ray = Workspace.Raycast(unit.Origin, unit.Direction.mul(RAY_RANGE), this.raycastParams);
 			nilRay = unit.Origin.add(
@@ -496,25 +504,17 @@ class PlacementClient {
 			);
 		}
 
+		let x: number, y: number, z: number;
+
 		if (ray !== undefined) {
 			x = ray.Position.X - offsetX;
 			z = ray.Position.Z - offsetZ;
 			target = platform;
 
 			if (SETTINGS.PLACEMENT_CONFIGS.bools.visualizeRays) {
-				const part = visualizeRaycast(ray, mouseRay.Origin);
-				part.Parent = Workspace;
-				this.raycastParams.AddToFilter(part);
-
-				Promise.delay(2).then(() => {
-					const tween = TweenService.Create(part, new TweenInfo(1), { Transparency: 1 });
-					tween.Play();
-
-					const completed = tween.Completed.Connect(() => {
-						part.Destroy();
-						completed.Disconnect();
-					});
-				});
+				if (unit) {
+					this.visualizeRay(ray, unit.Origin);
+				}
 			}
 
 			// if stackable ...
@@ -554,7 +554,8 @@ class PlacementClient {
 		} else {
 			return finalC
 				.mul(new CFrame(0, y - platform.Position.Y, 0))
-				.mul(CFrame.fromEulerAnglesXYZ(0, (this.stateMachine.getRotation() * math.pi) / 180, 0));
+				.mul(CFrame.fromEulerAnglesXYZ(0, (this.stateMachine.getRotation() * math.pi) / 180, 0))
+				.mul(this.calculateAngle(lastCFrame, finalC));
 		}
 	}
 
@@ -654,6 +655,48 @@ class PlacementClient {
 			hitboxColor = SETTINGS.PLACEMENT_CONFIGS.colors.hitboxCollidingColor3;
 		}
 		hitbox.Color = hitboxColor;
+	}
+
+	private visualizeRay(ray: RaycastResult, origin: Vector3): void {
+		const part = visualizeRaycast(ray, origin);
+		part.Parent = Workspace;
+		this.raycastParams.AddToFilter(part);
+
+		Promise.delay(2).then(() => {
+			const tween = TweenService.Create(part, new TweenInfo(1), { Transparency: 1 });
+			tween.Play();
+
+			tween.Completed.Connect(() => {
+				part.Destroy();
+			});
+		});
+	}
+
+	private getPlatformBasePart(): BasePart {
+		return this.plot[PLATFORM_INSTANCE_NAME];
+	}
+
+	private calculateAngle(lastCFrame: CFrame, currentCFrame: CFrame): CFrame {
+		if (SETTINGS.PLACEMENT_CONFIGS.bools.enableAngleTilt === false) {
+			return CFrame.fromEulerAnglesXYZ(0, 0, 0);
+		}
+
+		const amplitude = this.stateMachine.getAngleAmplitude();
+		const rotation = this.stateMachine.getRotation();
+		const platform = this.getPlatformBasePart();
+
+		const dirZ = math.sign(platform.CFrame.LookVector.Z);
+		const dirX = math.sign(platform.CFrame.LookVector.X);
+
+		const tiltX = ((math.clamp(lastCFrame.X - currentCFrame.X, -10, 10) * math.pi) / 180) * amplitude;
+		const tiltZ = ((math.clamp(lastCFrame.Z - currentCFrame.Z, -10, 10) * math.pi) / 180) * amplitude;
+		const preCalc = ((rotation + platform.Orientation.Y) * math.pi) / 180;
+
+		return CFrame.fromEulerAnglesXYZ(tiltZ, 0, tiltX)
+			.Inverse()
+			.mul(CFrame.fromEulerAnglesXYZ(0, preCalc, 0))
+			.Inverse()
+			.mul(CFrame.fromEulerAnglesXYZ(0, preCalc, 0));
 	}
 }
 

@@ -40,6 +40,11 @@ const SETTINGS = {
 			hitboxTransparency: 0.7,
 		},
 
+		colors: {
+			hitboxCollidingColor3: Color3.fromRGB(255, 75, 75),
+			hitboxNonCollidingColor3: Color3.fromRGB(75, 255, 75),
+		},
+
 		misc: {
 			defaultRaycastParams: new RaycastParams(),
 		},
@@ -283,7 +288,9 @@ class PlacementClient {
 		this.raycastParams.FilterDescendantsInstances = targetFilter;
 		this.raycastParams.FilterType = Enum.RaycastFilterType.Exclude;
 
-		this.janitor.bindToRenderStep("Input", Enum.RenderPriority.Input.Value, (dt) => this.translateObject(dt));
+		this.janitor.bindToRenderStep("Input", Enum.RenderPriority.Input.Value, (dt) => {
+			this.translateObject(dt);
+		});
 
 		this.stateMachine.setPlacementInitialized(true);
 		this.signals.onInitiated.Fire();
@@ -391,6 +398,10 @@ class PlacementClient {
 
 		const modelPrimaryPart = model.PrimaryPart;
 		if (modelPrimaryPart === undefined) return;
+
+		// Update collisions
+		this.updateHitboxCollisions();
+		this.updateHitboxColor();
 
 		if (this.stateMachine.getPlacementInitialized() === false) return;
 
@@ -585,6 +596,8 @@ class PlacementClient {
 			return false;
 		}
 
+		this.state = PlacementState.MOVING;
+
 		const collisionPoints = Workspace.GetPartsInPart(hitbox);
 
 		for (let i = 0; i < collisionPoints.size(); i++) {
@@ -594,8 +607,12 @@ class PlacementClient {
 				continue;
 			}
 
-			if (SETTINGS.PLACEMENT_CONFIGS.bools.characterCollisions === false) {
-				if ((character !== undefined && part.IsDescendantOf(character)) || character === undefined) {
+			if (SETTINGS.PLACEMENT_CONFIGS.bools.characterCollisions === true) {
+				if (character !== undefined && !part.IsDescendantOf(character)) {
+					continue;
+				}
+			} else {
+				if (character !== undefined && part.IsDescendantOf(character)) {
 					continue;
 				}
 			}
@@ -611,6 +628,19 @@ class PlacementClient {
 		}
 
 		return false;
+	}
+
+	private updateHitboxColor(): void {
+		const hitbox = this.stateMachine.getHitbox();
+
+		if (hitbox === undefined) return;
+
+		let hitboxColor = SETTINGS.PLACEMENT_CONFIGS.colors.hitboxNonCollidingColor3;
+
+		if (this.state === PlacementState.COLLIDING || this.state === PlacementState.OUT_OF_RANGE) {
+			hitboxColor = SETTINGS.PLACEMENT_CONFIGS.colors.hitboxCollidingColor3;
+		}
+		hitbox.Color = hitboxColor;
 	}
 }
 

@@ -15,6 +15,7 @@ abstract class StructureInstance implements IStructureInstance {
 		if (this.model !== undefined) {
 			this.model.Destroy();
 		}
+		this.model = undefined;
 	}
 
 	public spawn(): Model;
@@ -25,6 +26,7 @@ abstract class StructureInstance implements IStructureInstance {
 			res.Parent = parent;
 		}
 
+		this.model = res;
 		return res;
 	}
 }

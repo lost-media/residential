@@ -37,7 +37,7 @@ const SETTINGS = {
 
 		// floats
 		floats: {
-			angleTiltAmplitude: 5.0,
+			angleTiltAmplitude: 2.0,
 			transparencyDelta: 0.6,
 			hitboxTransparency: 0.7,
 		},
@@ -52,6 +52,10 @@ const SETTINGS = {
 		},
 	},
 };
+
+class PlacementClientSettings {
+	public repeatPlacement: boolean = true;
+}
 
 class PlacementClientSignals {
 	public onPlaced = new Signal<() => void>();
@@ -190,6 +194,7 @@ class PlacementClient {
 	private plot: PlotInstance;
 	private state: PlacementState;
 
+	private settings: PlacementClientSettings;
 	private stateMachine: PlacementClientStateMachine;
 	private janitor: Trove;
 	private mouse: Mouse;
@@ -202,7 +207,9 @@ class PlacementClient {
 		this.plot = plot;
 		this.state = PlacementState.INACTIVE;
 
+		this.settings = new PlacementClientSettings();
 		this.stateMachine = new PlacementClientStateMachine();
+
 		this.janitor = new Trove();
 		this.mouse = new Mouse();
 		this.raycastParams = new RaycastParams();
@@ -286,10 +293,8 @@ class PlacementClient {
 			if (processed === false) {
 				if (input.KeyCode === Enum.KeyCode.Q) {
 					this.raiseLevel();
-					print(this.stateMachine.getYLevel());
 				} else if (input.KeyCode === Enum.KeyCode.E) {
 					this.lowerLevel();
-					print(this.stateMachine.getYLevel());
 				} else if (input.KeyCode === Enum.KeyCode.R) {
 					this.rotate();
 				} else if (input.KeyCode === Enum.KeyCode.C) {
@@ -321,6 +326,22 @@ class PlacementClient {
 		return this.profiler.getAverageTime();
 	}
 
+	public confirmPlacement(): void {
+		if (this.state !== PlacementState.MOVING) return;
+
+		const model = this.stateMachine.getModel();
+
+		if (model === undefined) return;
+
+		this.cancelPlacement();
+
+		if (this.settings.repeatPlacement === false) {
+		} else {
+		}
+
+		this.signals.onPlacementConfirmed.Fire();
+	}
+
 	public cancelPlacement(): void {
 		if (this.state === PlacementState.INACTIVE) {
 			return;
@@ -340,7 +361,20 @@ class PlacementClient {
 		return this.state !== PlacementState.MOVING;
 	}
 
-	public raiseLevel(): void {
+	public getPlatform(): Platform {
+		const isXBOX = UserInputService.GamepadEnabled;
+		const isMobile = UserInputService.TouchEnabled;
+
+		if (isMobile === true) {
+			return Platform.MOBILE;
+		} else if (isXBOX === true) {
+			return Platform.CONSOLE;
+		} else {
+			return Platform.PC;
+		}
+	}
+
+	private raiseLevel(): void {
 		if (this.state === PlacementState.INACTIVE) {
 			return;
 		}
@@ -359,7 +393,7 @@ class PlacementClient {
 		this.signals.onLevelChanged.Fire(floorHeight);
 	}
 
-	public lowerLevel(): void {
+	private lowerLevel(): void {
 		if (this.state === PlacementState.INACTIVE) {
 			return;
 		}
@@ -399,19 +433,6 @@ class PlacementClient {
 		this.signals.onRotated.Fire(rotation);
 	}
 
-	public getPlatform(): Platform {
-		const isXBOX = UserInputService.GamepadEnabled;
-		const isMobile = UserInputService.TouchEnabled;
-
-		if (isMobile === true) {
-			return Platform.MOBILE;
-		} else if (isXBOX === true) {
-			return Platform.CONSOLE;
-		} else {
-			return Platform.PC;
-		}
-	}
-
 	private translateObject(dt: number) {
 		// This function should be as optimized as possible because it runs every frame
 		if (this.state === PlacementState.PLACING || this.state === PlacementState.INACTIVE) return;
@@ -443,7 +464,7 @@ class PlacementClient {
 		}
 	}
 
-	private calculateModelCFrame(lastCFrame: CFrame): CFrame {
+	private calculateModelCFrame(lastCFrame: CFrame = new CFrame()): CFrame {
 		const RAY_RANGE = 10000;
 
 		const isRotated = this.stateMachine.getIsRotated();
@@ -697,6 +718,14 @@ class PlacementClient {
 			.mul(CFrame.fromEulerAnglesXYZ(0, preCalc, 0))
 			.Inverse()
 			.mul(CFrame.fromEulerAnglesXYZ(0, preCalc, 0));
+	}
+
+	private getFinalCFrame(): CFrame {
+		return this.calculateModelCFrame(undefined);
+	}
+
+	private confirmPlacementHelper(): void {
+		
 	}
 }
 

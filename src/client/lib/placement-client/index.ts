@@ -6,13 +6,15 @@ import { Trove } from "@rbxts/trove";
 import Mouse from "../mouse";
 import { Player } from "@rbxts/knit/Knit/KnitClient";
 import { visualizeRaycast } from "shared/util/raycast-utils";
+import { PLATFORM_INSTANCE_NAME, PLOT_STRUCTURES_FOLDER_NAME } from "shared/lib/plot/configs";
 
 const SETTINGS = {
 	PLACEMENT_CONFIGS: {
 		// Bools
 		bools: {
+			enableAngleTilt: true,
 			enableFloors: true,
-			collisions: true,
+			enableCollisions: true,
 			characterCollisions: false,
 			transparentModel: true,
 			interpolate: true,
@@ -33,8 +35,9 @@ const SETTINGS = {
 
 		// floats
 		floats: {
+			angleTiltAmplitude: 5.0,
 			transparencyDelta: 0.6,
-			hitboxTransparency: 0.3,
+			hitboxTransparency: 0.7,
 		},
 
 		misc: {
@@ -45,7 +48,7 @@ const SETTINGS = {
 
 class PlacementClientSignals {
 	public onPlaced = new Signal<() => void>();
-	public onCollided = new Signal<() => void>();
+	public onCollided = new Signal<(part: BasePart) => void>();
 	public onRotated = new Signal<(rotation: number) => void>();
 	public onCancelled = new Signal<() => void>();
 	public onLevelChanged = new Signal<(level: number) => void>();
@@ -196,7 +199,7 @@ class PlacementClient {
 			`[PlacementClient:initiatePlacement]: The model to place DOES NOT have a primary part`,
 		);
 
-		const platform = this.plot.WaitForChild("Platform") as BasePart | undefined;
+		const platform = this.plot.WaitForChild(PLATFORM_INSTANCE_NAME) as BasePart | undefined;
 
 		const targetFilter = new Array<Instance>();
 
@@ -227,6 +230,7 @@ class PlacementClient {
 		// SETTING: sets the model's transparency relative to the transparencyDelta
 		if (SETTINGS.PLACEMENT_CONFIGS.bools.transparentModel === true) {
 			setModelRelativeTransparency(model, SETTINGS.PLACEMENT_CONFIGS.floats.transparencyDelta);
+			model.PrimaryPart.Transparency = 1;
 		}
 
 		if (SETTINGS.PLACEMENT_CONFIGS.bools.blackListCharacterForRaycast === true) {
@@ -236,14 +240,13 @@ class PlacementClient {
 		}
 
 		// set the primary part's hitbox transparency
-		model.PrimaryPart.Transparency = SETTINGS.PLACEMENT_CONFIGS.floats.hitboxTransparency;
 
 		// set up the hitbox
 		const hitbox = this.janitor.clone(model.PrimaryPart);
 		hitbox.ClearAllChildren();
 		this.stateMachine.setHitbox(hitbox);
 
-		hitbox.Transparency = 0.5;
+		hitbox.Transparency = SETTINGS.PLACEMENT_CONFIGS.floats.hitboxTransparency;
 		hitbox.Name = "Hitbox";
 		hitbox.Parent = model;
 
@@ -412,7 +415,7 @@ class PlacementClient {
 		const initialY = this.stateMachine.getInitialYPosition();
 
 		const modelPrimaryPart = model?.PrimaryPart as BasePart;
-		const platform = this.plot.FindFirstChild("Platform") as BasePart | undefined;
+		const platform = this.plot.FindFirstChild(PLATFORM_INSTANCE_NAME) as BasePart | undefined;
 
 		if (platform === undefined) {
 			return new CFrame();
@@ -558,6 +561,56 @@ class PlacementClient {
 		const newZ: number = math.clamp(cframe.Z, -zBound, zBound);
 
 		return new CFrame(newX, 0, newZ);
+	}
+
+	/**
+	 *
+	 * @returns true if the current model and hitbox are colliding with an unknown object
+	 */
+	private updateHitboxCollisions(): boolean {
+		const hitbox = this.stateMachine.getHitbox();
+		const model = this.stateMachine.getModel();
+		const plot = this.plot;
+		const character = Player.Character;
+
+		if (hitbox === undefined) {
+			return false;
+		}
+
+		if (model === undefined) {
+			return false;
+		}
+
+		if (SETTINGS.PLACEMENT_CONFIGS.bools.enableCollisions === false) {
+			return false;
+		}
+
+		const collisionPoints = Workspace.GetPartsInPart(hitbox);
+
+		for (let i = 0; i < collisionPoints.size(); i++) {
+			const part = collisionPoints[i];
+
+			if (part.CanTouch === false) {
+				continue;
+			}
+
+			if (SETTINGS.PLACEMENT_CONFIGS.bools.characterCollisions === false) {
+				if ((character !== undefined && part.IsDescendantOf(character)) || character === undefined) {
+					continue;
+				}
+			}
+
+			if (part.IsDescendantOf(model) === true || part === plot.FindFirstChild(PLOT_STRUCTURES_FOLDER_NAME)) {
+				continue;
+			}
+
+			// at this point, the object is colliding with something else
+			this.state = PlacementState.COLLIDING;
+			this.signals.onCollided.Fire(part);
+			return true;
+		}
+
+		return false;
 	}
 }
 

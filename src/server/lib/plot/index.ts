@@ -1,5 +1,6 @@
 import { Assert } from "@rbxts/lunit";
 import { LinkedList } from "shared/lib/data-structures/linked-list";
+import { PLOT_STRUCTURES_FOLDER_NAME } from "shared/lib/plot/configs";
 import { IStructureInstance } from "shared/lib/residential/types";
 
 export default class Plot {
@@ -44,14 +45,14 @@ export default class Plot {
 		});
 
 		Assert.empty(
-			this.instance.Structures.GetChildren(),
+			this.instance[PLOT_STRUCTURES_FOLDER_NAME].GetChildren(),
 			() => `[Plot]: Object leak detected while unassigning player ${this.player?.Name}`,
 		);
 	}
 
 	public addStructure(structureInstance: IStructureInstance, cFrame: CFrame): void {
 		// spawn a model
-		const newStructure = structureInstance.spawn(this.instance.Structures);
+		const newStructure = structureInstance.spawn(this.instance[PLOT_STRUCTURES_FOLDER_NAME]);
 
 		if (newStructure.PrimaryPart === undefined) {
 			throw `[Plot]: Primary part of structure model with ID ${structureInstance.structure.id} does not have a Primary Part`;

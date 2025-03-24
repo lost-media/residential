@@ -8,14 +8,22 @@ const PlacementController = Knit.CreateController({
 
 	placementClient: undefined as unknown as PlacementClient,
 
-	async KnitStart() {
+	async KnitStart(): Promise<void> {
 		const plotController = Knit.GetController("PlotController");
 		const plot = await plotController.getPlotAsync();
 
 		this.placementClient = new PlacementClient(plot);
 
+		this.placeModel();
+	},
+
+	async placeModel(): Promise<void> {
 		try {
 			this.placementClient.initiatePlacement(chooseRandomStructure()?.model.Clone());
+			const connection = this.placementClient.signals.onCancelled.Connect(() => {
+				connection.Disconnect();
+				this.placeModel();
+			});
 		} catch (e) {
 			LoggerFactory.getLogger().log(`[PlacementController]: Error initiating placement ${e}`);
 		}

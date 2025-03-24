@@ -7,11 +7,13 @@ import Mouse from "../mouse";
 import { Player } from "@rbxts/knit/Knit/KnitClient";
 import { visualizeRaycast } from "shared/util/raycast-utils";
 import { PLATFORM_INSTANCE_NAME, PLOT_STRUCTURES_FOLDER_NAME } from "shared/lib/plot/configs";
+import { RepeatableProfiler } from "shared/util/profiler";
 
 const SETTINGS = {
 	PLACEMENT_CONFIGS: {
 		// Bools
 		bools: {
+			profileRenderStepped: true,
 			enableAngleTilt: true,
 			enableFloors: true,
 			enableCollisions: true,
@@ -180,6 +182,7 @@ class PlacementClient {
 	private janitor: Trove;
 	private mouse: Mouse;
 	private raycastParams: RaycastParams;
+	private profiler: RepeatableProfiler;
 
 	public signals: PlacementClientSignals;
 
@@ -191,6 +194,7 @@ class PlacementClient {
 		this.janitor = new Trove();
 		this.mouse = new Mouse();
 		this.raycastParams = new RaycastParams();
+		this.profiler = new RepeatableProfiler();
 
 		this.signals = new PlacementClientSignals();
 	}
@@ -289,11 +293,20 @@ class PlacementClient {
 		this.raycastParams.FilterType = Enum.RaycastFilterType.Exclude;
 
 		this.janitor.bindToRenderStep("Input", Enum.RenderPriority.Input.Value, (dt) => {
-			this.translateObject(dt);
+			// Profile the render stepped function
+			if (SETTINGS.PLACEMENT_CONFIGS.bools.profileRenderStepped === true) {
+				this.profiler.tic();
+				this.translateObject(dt);
+				this.profiler.toc();
+			} else this.translateObject(dt);
 		});
 
 		this.stateMachine.setPlacementInitialized(true);
 		this.signals.onInitiated.Fire();
+	}
+
+	public getRenderLoopAverageTime(): number {
+		return this.profiler.getAverageTime();
 	}
 
 	public cancelPlacement(): void {

@@ -101,6 +101,7 @@ export class RepeatableProfiler {
 
 		const time = os.clock() - this.lastUpdate;
 
+		this.isTracking = false;
 		this.entries[this.nextIndexToUpdate] = time;
 
 		this.nextIndexToUpdate++;
@@ -120,7 +121,7 @@ export class RepeatableProfiler {
 	 * print(`Average Time: ${averageTime} seconds`);
 	 */
 	getAverageTime(): number {
-		return getAverageOfList(this.entries);
+		return getAverageOfList(this.entries.filter((val, index) => index <= this.nextIndexToUpdate));
 	}
 
 	/**
@@ -133,6 +134,6 @@ export class RepeatableProfiler {
 	 * print(`Average Time: ${formattedAverage}`);
 	 */
 	getFormattedAverage(): string {
-		return string.format("%f s", this.getAverageTime());
+		return string.format("%2f s", this.getAverageTime());
 	}
 }

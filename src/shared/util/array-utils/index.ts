@@ -9,6 +9,8 @@ export function combineLists<T extends defined>(...lists: Array<T>[]): Array<T> 
 }
 
 export function getAverageOfList(list: Array<number>): number {
-	assert(list.size() > 0, "[array-utils:getAverageOfList]: Divide by zero error");
+	if (list.size() === 0) {
+		return 0;
+	}
 	return list.reduce((accumulator, val) => accumulator + val) / list.size();
 }

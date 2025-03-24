@@ -8,6 +8,10 @@ class PlotFactory {
 
 	private constructor() {}
 
+	public static getPlots(): Plot[] {
+		return PlotFactory.plots.values();
+	}
+
 	public static loadPlotsFromParent(parent: Instance) {
 		Assert.notUndefined(parent, () => `[PlotFactory:addPlotsFromParent]: Expected a defined parent instance`);
 
@@ -17,7 +21,7 @@ class PlotFactory {
 	}
 
 	public static count(): number {
-		return this.plots.size();
+		return PlotFactory.plots.size();
 	}
 
 	public static addPlot(plot: Instance): void {
@@ -34,24 +38,25 @@ class PlotFactory {
 		);
 
 		// don't add the plot again if it already exists
-		if (this.plots.contains(plot) === true) {
+		if (PlotFactory.plots.contains(plot) === true) {
 			return;
 		}
 
 		const newPlot = new Plot(plot as PlotInstance);
 
-		this.plots.add(plot, newPlot);
+		PlotFactory.plots.add(plot, newPlot);
 	}
 
 	public static assignPlayer(player: Player): Optional<Plot> {
 		// first, check if the player is assigned. don't do anything if they are assigned
-		if (this.getPlayersPlot(player) !== undefined) {
+		if (PlotFactory.getPlayersPlot(player) !== undefined) {
 			return;
 		}
 
-		const plotToAdd = this.plots.find((_, plot) => plot.isAssigned() === false);
+		const plotToAdd = PlotFactory.plots.find((_, plot) => plot.isAssigned() === false);
 
 		if (plotToAdd !== undefined) {
+			plotToAdd.assignPlayer(player);
 			return plotToAdd;
 		} else {
 			throw `[PlotFactory:assignPlayer]: Unable to find an available plot for player ${player.Name}`;
@@ -59,7 +64,7 @@ class PlotFactory {
 	}
 
 	public static getPlayersPlot(player: Player): Optional<Plot> {
-		return this.plots.find((_, plot) => plot.getPlayer() === player);
+		return PlotFactory.plots.find((_, plot) => plot.getPlayer() === player);
 	}
 }
 

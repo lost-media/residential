@@ -1,6 +1,7 @@
 import { KnitServer as Knit, RemoteSignal } from "@rbxts/knit";
 import { Player } from "@rbxts/knit/Knit/KnitClient";
 import { HttpService, Workspace } from "@rbxts/services";
+import Plot from "server/lib/plot";
 import PlotFactory from "server/lib/plot/factory";
 import { getStructureById } from "shared/lib/residential/structures/utils/get-structures";
 import StructureInstance from "shared/lib/residential/structures/utils/structure-instance";
@@ -51,7 +52,7 @@ const PlotService = Knit.CreateService({
 	},
 
 	placeStructure(player: Player, structureId: string, cframe: CFrame): void {
-		/*const playersPlot = PlotFactory.getPlayersPlot(Player);
+		const playersPlot = PlotFactory.getPlayersPlot(player);
 		assert(playersPlot !== undefined, `[PlotService:placeStructure]: Player "${player.Name}" doesn't have a plot`);
 
 		const structure = getStructureById(structureId);
@@ -63,7 +64,10 @@ const PlotService = Knit.CreateService({
 		// create a new UUID
 		const uuid = HttpService.GenerateGUID(false);
 		playersPlot.addStructure(new StructureInstance(uuid, structure), cframe);
-		*/
+	},
+
+	getPlotFromPlayer(player: Player): Optional<Plot> {
+		return PlotFactory.getPlots().find((plot) => plot.getPlayer() === player);
 	},
 });
 

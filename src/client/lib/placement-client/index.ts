@@ -18,7 +18,7 @@ const SETTINGS = {
 			interpolate: true,
 			moveByGrid: true,
 			blackListCharacterForRaycast: true,
-			visualizeRays: true,
+			visualizeRays: false,
 		},
 
 		// test
@@ -78,6 +78,18 @@ class PlacementClientStateMachine {
 
 	// can't make objects of this class
 	constructor() {}
+
+	public reset() {
+		this.isRotated = false;
+		this.rotation = 0;
+		this.placementInitialized = false;
+
+		this.model?.Destroy();
+		this.model = undefined;
+
+		this.hitbox?.Destroy();
+		this.hitbox = undefined;
+	}
 
 	public getHitbox(): Optional<BasePart> {
 		return this.hitbox;
@@ -256,6 +268,8 @@ class PlacementClient {
 					print(this.stateMachine.getYLevel());
 				} else if (input.KeyCode === Enum.KeyCode.R) {
 					this.rotate();
+				} else if (input.KeyCode === Enum.KeyCode.C) {
+					this.cancelPlacement();
 				}
 			}
 		});
@@ -273,7 +287,18 @@ class PlacementClient {
 	}
 
 	public cancelPlacement(): void {
+		if (this.state === PlacementState.INACTIVE) {
+			return;
+		}
+
+		// Set the state to inactive
+		this.state = PlacementState.INACTIVE;
 		this.janitor.destroy();
+
+		// reset states to their original values
+		this.stateMachine.reset();
+
+		this.signals.onCancelled.Fire();
 	}
 
 	public isPlacing(): boolean {
@@ -526,7 +551,6 @@ class PlacementClient {
 	}
 
 	private clampToBounds(platform: BasePart, cframe: CFrame, offsetX: number, offsetZ: number): CFrame {
-		const pos: CFrame = platform.CFrame;
 		const xBound: number = platform.Size.X * 0.5 - offsetX;
 		const zBound: number = platform.Size.Z * 0.5 - offsetZ;
 

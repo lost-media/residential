@@ -29,6 +29,15 @@ class StructureInstance implements IStructureInstance {
 		this.model = res;
 		return res;
 	}
+
+	public serialize(): object {
+		return {
+			uuid: this.uuid,
+			structure_id: this.structure.id,
+
+			// any properties (i.e physical, metadata, etc) specific to this structure can go here
+		};
+	}
 }
 
 export = StructureInstance;

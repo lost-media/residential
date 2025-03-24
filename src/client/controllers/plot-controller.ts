@@ -41,14 +41,9 @@ const PlotController = KnitClient.CreateController({
 	async placeStructure(structureId: string, cframe: CFrame): Promise<void> {
 		const plotService = KnitClient.GetService("PlotService");
 
-		plotService
-			.placeStructurePromise(structureId, cframe)
-			.then(() => {
-				print("Successful!");
-			})
-			.catch((e) => {
-				LoggerFactory.getLogger().log(`[PlotController:placeStructure]: Error from server: ${e}`);
-			});
+		plotService.placeStructurePromise(structureId, cframe).catch((e) => {
+			LoggerFactory.getLogger().log(`[PlotController:placeStructure]: Error from server: ${e}`);
+		});
 	},
 });
 

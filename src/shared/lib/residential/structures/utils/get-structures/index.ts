@@ -1,5 +1,6 @@
 import { IStructure } from "shared/lib/residential/types";
 import { StructureCategories } from "../..";
+import { ID_ATTRIBUTE_KEY } from "shared/lib/residential/configs";
 
 export function getStructureById(structureId: string): Optional<IStructure> {
 	let structure: Optional<IStructure> = undefined;
@@ -12,4 +13,13 @@ export function getStructureById(structureId: string): Optional<IStructure> {
 	});
 
 	return structure;
+}
+
+export function getIdFromModel(model: Instance): Optional<string> {
+	const id = model.GetAttribute(ID_ATTRIBUTE_KEY);
+	if (model.GetAttribute(ID_ATTRIBUTE_KEY) !== undefined) {
+		return tostring(id);
+	} else {
+		return undefined;
+	}
 }

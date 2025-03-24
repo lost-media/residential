@@ -13,7 +13,7 @@ const SETTINGS = {
 	PLACEMENT_CONFIGS: {
 		// Bools
 		bools: {
-			profileRenderStepped: true,
+			profileRenderStepped: false,
 			enableAngleTilt: true,
 			enableFloors: true,
 			enableCollisions: true,
@@ -462,18 +462,18 @@ class PlacementClient {
 			this.updateHitboxColor();
 		}
 
-		const calculatedPosition = this.calculateModelCFrame(modelPrimaryPart.CFrame);
+		const calculatedPosition = this.calculateModelCFrame(hitbox.CFrame);
 
 		if (SETTINGS.PLACEMENT_CONFIGS.bools.interpolate === true) {
 			const SPEED = 1;
 			const lerpFactor = SPEED * dt * SETTINGS.PLACEMENT_CONFIGS.integers.targetFps;
 			model.PivotTo(hitbox.CFrame.Lerp(calculatedPosition, lerpFactor));
 		} else {
-			model?.PivotTo(calculatedPosition);
+			model.PivotTo(calculatedPosition);
 		}
 	}
 
-	private calculateModelCFrame(lastCFrame: CFrame = new CFrame()): CFrame {
+	private calculateModelCFrame(lastCFrame?: CFrame): CFrame {
 		const RAY_RANGE = 10000;
 
 		const isRotated = this.stateMachine.getIsRotated();
@@ -577,7 +577,7 @@ class PlacementClient {
 
 		y = math.clamp(y, initialY, SETTINGS.PLACEMENT_CONFIGS.integers.maxHeight + initialY);
 
-		if (SETTINGS.PLACEMENT_CONFIGS.bools.interpolate === false) {
+		if (SETTINGS.PLACEMENT_CONFIGS.bools.enableAngleTilt === false || lastCFrame === undefined) {
 			return finalC
 				.mul(new CFrame(0, y - platform.Position.Y, 0))
 				.mul(CFrame.fromEulerAnglesXYZ(0, (this.stateMachine.getRotation() * math.pi) / 180, 0));

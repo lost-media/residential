@@ -55,6 +55,7 @@ const SETTINGS = {
 
 class PlacementClientSettings {
 	public repeatPlacement: boolean = true;
+	public isStackable: boolean = false;
 }
 
 class PlacementClientSignals {
@@ -65,7 +66,7 @@ class PlacementClientSignals {
 	public onLevelChanged = new Signal<(level: number) => void>();
 	public outOfRange = new Signal<() => void>();
 	public onInitiated = new Signal<() => void>();
-	public onPlacementConfirmed = new Signal<() => void>();
+	public onPlacementConfirmed = new Signal<(cframe: CFrame) => void>();
 	public onDeleteStructure = new Signal<() => void>();
 }
 
@@ -208,6 +209,8 @@ class PlacementClient {
 		this.state = PlacementState.INACTIVE;
 
 		this.settings = new PlacementClientSettings();
+		this.settings.isStackable = this.settings.isStackable ?? false;
+
 		this.stateMachine = new PlacementClientStateMachine();
 
 		this.janitor = new Trove();
@@ -299,6 +302,8 @@ class PlacementClient {
 					this.rotate();
 				} else if (input.KeyCode === Enum.KeyCode.C) {
 					this.cancelPlacement();
+				} else if (input.UserInputType === Enum.UserInputType.MouseButton1) {
+					this.confirmPlacement();
 				}
 			}
 		});
@@ -333,13 +338,20 @@ class PlacementClient {
 
 		if (model === undefined) return;
 
-		this.cancelPlacement();
+		const finalCFrame = this.getFinalCFrame();
+		const isColliding = this.updateHitboxCollisions();
 
-		if (this.settings.repeatPlacement === false) {
-		} else {
+		if (isColliding === true) {
+			print("COLLIDING, CANNOT PLACE!");
+			return;
 		}
 
-		this.signals.onPlacementConfirmed.Fire();
+
+		if (this.settings.repeatPlacement === false) {
+			this.cancelPlacement();
+		}
+
+		this.signals.onPlacementConfirmed.Fire(finalCFrame);
 	}
 
 	public cancelPlacement(): void {
@@ -722,10 +734,6 @@ class PlacementClient {
 
 	private getFinalCFrame(): CFrame {
 		return this.calculateModelCFrame(undefined);
-	}
-
-	private confirmPlacementHelper(): void {
-		
 	}
 }
 

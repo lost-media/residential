@@ -1,7 +1,7 @@
 import { Assert } from "@rbxts/lunit";
 import Plot from ".";
-import { LinkedList } from "shared/lib/DataStructures/LinkedList";
-import { PlotInstance } from "./types";
+import { LinkedList } from "shared/lib/data-structures/linked-list";
+import { PLATFORM_INSTANCE_NAME, PLOT_STRUCTURES_FOLDER_NAME } from "shared/lib/plot/configs";
 
 class PlotFactory {
 	private static plots: LinkedList<Instance, Plot> = new LinkedList();
@@ -23,13 +23,14 @@ class PlotFactory {
 	public static addPlot(plot: Instance): void {
 		// verify that the plot has the right structure before adding it to the array
 		Assert.notUndefined(
-			plot.FindFirstChild("Structures"),
-			() => `[PlotFactory:addPlot]: Plot "${plot.Name}" does not have a folder called "Structures"`,
+			plot.FindFirstChild(PLOT_STRUCTURES_FOLDER_NAME),
+			() =>
+				`[PlotFactory:addPlot]: Plot "${plot.Name}" does not have a folder called "${PLOT_STRUCTURES_FOLDER_NAME}"`,
 		);
 
 		Assert.notUndefined(
-			plot.FindFirstChild("Tiles"),
-			() => `[PlotFactory:addPlot]: Plot "${plot.Name}" does not have a folder called "Tiles"`,
+			plot.FindFirstChild(PLATFORM_INSTANCE_NAME),
+			() => `[PlotFactory:addPlot]: Plot "${plot.Name}" does not have a folder called ${PLATFORM_INSTANCE_NAME}`,
 		);
 
 		// don't add the plot again if it already exists

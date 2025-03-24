@@ -22,6 +22,7 @@ const SETTINGS = {
 			gridSize: 4,
 			maxRaycastRange: 999, // in studs
 			maxHeight: 999,
+			floorStep: 8,
 			targetFps: 60,
 		},
 
@@ -42,7 +43,7 @@ class PlacementClientSignals {
 	public collided = new Signal<() => void>();
 	public rotated = new Signal<() => void>();
 	public cancelled = new Signal<() => void>();
-	public onLevelChanged = new Signal<() => void>();
+	public onLevelChanged = new Signal<(level: number) => void>();
 	public outOfRange = new Signal<() => void>();
 	public initiated = new Signal<() => void>();
 	public onPlacementConfirmed = new Signal<() => void>();
@@ -214,7 +215,7 @@ class PlacementClient {
 		hitbox.ClearAllChildren();
 		this.stateMachine.setHitbox(hitbox);
 
-		hitbox.Transparency = 1;
+		hitbox.Transparency = 0.5;
 		hitbox.Name = "Hitbox";
 		hitbox.Parent = model;
 
@@ -229,6 +230,16 @@ class PlacementClient {
 
 		model.Parent = Workspace;
 
+		// bind all events here
+		this.janitor.connect(UserInputService.InputBegan, (input, processed) => {
+			if (processed === false) {
+				if (input.KeyCode === Enum.KeyCode.Q) {
+					this.raiseLevel();
+				} else if (input.KeyCode === Enum.KeyCode.E) {
+					this.lowerLevel();
+				}
+			}
+		});
 		this.janitor.bindToRenderStep("Input", Enum.RenderPriority.Input.Value, (dt) => this.translateObject(dt));
 	}
 
@@ -238,6 +249,42 @@ class PlacementClient {
 
 	public isPlacing(): boolean {
 		return this.state !== PlacementState.MOVING;
+	}
+
+	public raiseLevel(): void {
+		if (this.state === PlacementState.INACTIVE) {
+			return;
+		}
+
+		if (SETTINGS.PLACEMENT_CONFIGS.bools.enableFloors === false) {
+			return;
+		}
+
+		let floorHeight = this.stateMachine.getYLevel();
+		floorHeight += math.floor(math.abs(SETTINGS.PLACEMENT_CONFIGS.integers.floorStep));
+		floorHeight = math.clamp(floorHeight, 0, SETTINGS.PLACEMENT_CONFIGS.integers.maxHeight);
+
+		this.stateMachine.setYLevel(floorHeight);
+
+		this.signals.onLevelChanged.Fire(floorHeight);
+	}
+
+	public lowerLevel(): void {
+		if (this.state === PlacementState.INACTIVE) {
+			return;
+		}
+
+		if (SETTINGS.PLACEMENT_CONFIGS.bools.enableFloors === false) {
+			return;
+		}
+
+		let floorHeight = this.stateMachine.getYLevel();
+		floorHeight -= math.floor(math.abs(SETTINGS.PLACEMENT_CONFIGS.integers.floorStep));
+		floorHeight = math.clamp(floorHeight, 0, SETTINGS.PLACEMENT_CONFIGS.integers.maxHeight);
+
+		this.stateMachine.setYLevel(floorHeight);
+
+		this.signals.onLevelChanged.Fire(floorHeight);
 	}
 
 	public getPlatform(): Platform {
@@ -395,7 +442,7 @@ class PlacementClient {
 		const offsetZ = (platform.Size.Z % (2 * gridSize)) / 2;
 
 		const newX = math.round(cframe.X / gridSize) * gridSize - offsetX;
-		const newZ = math.round(cframe.Z / gridSize) * gridSize - offsetX;
+		const newZ = math.round(cframe.Z / gridSize) * gridSize - offsetZ;
 
 		return new CFrame(newX, 0, newZ);
 	}

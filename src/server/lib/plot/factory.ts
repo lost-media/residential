@@ -58,7 +58,7 @@ class PlotFactory {
 		}
 	}
 
-	private static getPlayersPlot(player: Player): Optional<Plot> {
+	public static getPlayersPlot(player: Player): Optional<Plot> {
 		return this.plots.find((_, plot) => plot.getPlayer() === player);
 	}
 }

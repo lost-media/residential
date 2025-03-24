@@ -283,8 +283,6 @@ class PlacementClient {
 
 		model.PrimaryPart.Anchored = false;
 
-		this.state = PlacementState.MOVING;
-
 		this.stateMachine.setinitialYPosition(
 			this.calculateYPosition(platform.Position.Y, platform.Size.Y, model.PrimaryPart.Size.Y, 1),
 		);
@@ -313,6 +311,8 @@ class PlacementClient {
 
 		this.raycastParams.FilterDescendantsInstances = targetFilter;
 		this.raycastParams.FilterType = Enum.RaycastFilterType.Exclude;
+
+		this.state = PlacementState.MOVING;
 
 		this.janitor.bindToRenderStep("Input", Enum.RenderPriority.Input.Value, (dt) => {
 			// Profile the render stepped function
@@ -346,7 +346,6 @@ class PlacementClient {
 			return;
 		}
 
-
 		if (this.settings.repeatPlacement === false) {
 			this.cancelPlacement();
 		}
@@ -361,7 +360,7 @@ class PlacementClient {
 
 		// Set the state to inactive
 		this.state = PlacementState.INACTIVE;
-		this.janitor.destroy();
+		this.janitor.clean();
 
 		// reset states to their original values
 		this.stateMachine.reset();
@@ -369,8 +368,8 @@ class PlacementClient {
 		this.signals.onCancelled.Fire();
 	}
 
-	public isPlacing(): boolean {
-		return this.state !== PlacementState.MOVING;
+	public isMoving(): boolean {
+		return this.state === PlacementState.MOVING;
 	}
 
 	public getPlatform(): Platform {
@@ -397,7 +396,6 @@ class PlacementClient {
 
 		let floorHeight = this.stateMachine.getYLevel();
 		floorHeight++;
-		//floorHeight += math.floor(math.abs(SETTINGS.PLACEMENT_CONFIGS.integers.floorStep));
 		floorHeight = math.clamp(floorHeight, 0, SETTINGS.PLACEMENT_CONFIGS.integers.maxHeight);
 
 		this.stateMachine.setYLevel(floorHeight);
@@ -416,7 +414,6 @@ class PlacementClient {
 
 		let floorHeight = this.stateMachine.getYLevel();
 		floorHeight--;
-		//floorHeight -= math.floor(math.abs(SETTINGS.PLACEMENT_CONFIGS.integers.floorStep));
 		floorHeight = math.clamp(floorHeight, 0, SETTINGS.PLACEMENT_CONFIGS.integers.maxHeight);
 
 		this.stateMachine.setYLevel(floorHeight);
@@ -626,6 +623,8 @@ class PlacementClient {
 	 * @returns true if the current model and hitbox are colliding with an unknown object
 	 */
 	private updateHitboxCollisions(): boolean {
+		if (this.state !== PlacementState.MOVING && this.state !== PlacementState.COLLIDING) return false;
+
 		const hitbox = this.stateMachine.getHitbox();
 		const model = this.stateMachine.getModel();
 		const plot = this.plot;

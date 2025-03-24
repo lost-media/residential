@@ -1,6 +1,6 @@
 import type { IStructure, IStructureInstance } from "shared/lib/residential/types";
 
-abstract class StructureInstance implements IStructureInstance {
+class StructureInstance implements IStructureInstance {
 	public uuid: string;
 	public structure: IStructure;
 	public model?: Model | undefined;

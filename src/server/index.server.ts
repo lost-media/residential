@@ -2,7 +2,7 @@ import { KnitServer } from "@rbxts/knit";
 import LoggerFactory, { LogLevel } from "shared/util/logger/factory";
 import { TestRunner } from "@rbxts/lunit";
 import { StructureCategories } from "shared/lib/residential/structures";
-import { initializeStructure } from "shared/lib/residential/structures/utils/initialize-structure";
+import { initializeStructure } from "shared/lib/residential/structures/utils/initialize-structure-models";
 
 const TESTS_ENABLED = true;
 

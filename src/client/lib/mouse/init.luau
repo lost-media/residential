@@ -125,7 +125,7 @@ function Mouse:GetTargetFilter()
 	return self.filterDescendants
 end
 
-function Mouse:getTargetFilter(object: Instance | { Instance })
+function Mouse:setTargetFilter(object: Instance | { Instance })
 	local dataType = typeof(object)
 	if dataType == "Instance" then
 		self.filterDescendants = { object :: Instance }

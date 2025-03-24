@@ -1,9 +1,11 @@
-import { UserInputService, Workspace } from "@rbxts/services";
+import { TweenService, UserInputService, Workspace } from "@rbxts/services";
 import { PlacementState, Platform, ModelSettings } from "./types";
-import { Janitor, Signal } from "@rbxts/knit";
+import { Signal } from "@rbxts/knit";
 import { setModelAnchored, setModelCanCollide, setModelRelativeTransparency } from "shared/util/instance-utils";
 import { Trove } from "@rbxts/trove";
 import Mouse from "../mouse";
+import { Player } from "@rbxts/knit/Knit/KnitClient";
+import { visualizeRaycast } from "shared/util/raycast-utils";
 
 const SETTINGS = {
 	PLACEMENT_CONFIGS: {
@@ -15,6 +17,8 @@ const SETTINGS = {
 			transparentModel: true,
 			interpolate: true,
 			moveByGrid: true,
+			blackListCharacterForRaycast: true,
+			visualizeRays: true,
 		},
 
 		// test
@@ -23,6 +27,7 @@ const SETTINGS = {
 			maxRaycastRange: 999, // in studs
 			maxHeight: 999,
 			floorStep: 8,
+			rotationStep: 90,
 			targetFps: 60,
 		},
 
@@ -39,13 +44,13 @@ const SETTINGS = {
 };
 
 class PlacementClientSignals {
-	public placed = new Signal<() => void>();
-	public collided = new Signal<() => void>();
-	public rotated = new Signal<() => void>();
-	public cancelled = new Signal<() => void>();
+	public onPlaced = new Signal<() => void>();
+	public onCollided = new Signal<() => void>();
+	public onRotated = new Signal<(rotation: number) => void>();
+	public onCancelled = new Signal<() => void>();
 	public onLevelChanged = new Signal<(level: number) => void>();
 	public outOfRange = new Signal<() => void>();
-	public initiated = new Signal<() => void>();
+	public onInitiated = new Signal<() => void>();
 	public onPlacementConfirmed = new Signal<() => void>();
 	public onDeleteStructure = new Signal<() => void>();
 }
@@ -154,6 +159,7 @@ class PlacementClient {
 	private stateMachine: PlacementClientStateMachine;
 	private janitor: Trove;
 	private mouse: Mouse;
+	private raycastParams: RaycastParams;
 
 	public signals: PlacementClientSignals;
 
@@ -164,6 +170,7 @@ class PlacementClient {
 		this.stateMachine = new PlacementClientStateMachine();
 		this.janitor = new Trove();
 		this.mouse = new Mouse();
+		this.raycastParams = new RaycastParams();
 
 		this.signals = new PlacementClientSignals();
 	}
@@ -178,6 +185,8 @@ class PlacementClient {
 		);
 
 		const platform = this.plot.WaitForChild("Platform") as BasePart | undefined;
+
+		const targetFilter = new Array<Instance>();
 
 		if (platform === undefined) {
 			return;
@@ -194,6 +203,7 @@ class PlacementClient {
 
 		// add to janitor for garbage collecting
 		this.janitor.add(model);
+		targetFilter.push(model);
 
 		this.stateMachine.setModel(model);
 		this.stateMachine.setYLevel(0);
@@ -205,6 +215,12 @@ class PlacementClient {
 		// SETTING: sets the model's transparency relative to the transparencyDelta
 		if (SETTINGS.PLACEMENT_CONFIGS.bools.transparentModel === true) {
 			setModelRelativeTransparency(model, SETTINGS.PLACEMENT_CONFIGS.floats.transparencyDelta);
+		}
+
+		if (SETTINGS.PLACEMENT_CONFIGS.bools.blackListCharacterForRaycast === true) {
+			if (Player.Character !== undefined) {
+				targetFilter.push(Player.Character);
+			}
 		}
 
 		// set the primary part's hitbox transparency
@@ -223,7 +239,6 @@ class PlacementClient {
 
 		this.state = PlacementState.MOVING;
 
-		this.stateMachine.setPlacementInitialized(true);
 		this.stateMachine.setinitialYPosition(
 			this.calculateYPosition(platform.Position.Y, platform.Size.Y, model.PrimaryPart.Size.Y, 1),
 		);
@@ -235,12 +250,26 @@ class PlacementClient {
 			if (processed === false) {
 				if (input.KeyCode === Enum.KeyCode.Q) {
 					this.raiseLevel();
+					print(this.stateMachine.getYLevel());
 				} else if (input.KeyCode === Enum.KeyCode.E) {
 					this.lowerLevel();
+					print(this.stateMachine.getYLevel());
+				} else if (input.KeyCode === Enum.KeyCode.R) {
+					this.rotate();
 				}
 			}
 		});
+
+		this.mouse.setTargetFilter(targetFilter);
+		this.mouse.setFilterType(Enum.RaycastFilterType.Exclude);
+
+		this.raycastParams.FilterDescendantsInstances = targetFilter;
+		this.raycastParams.FilterType = Enum.RaycastFilterType.Exclude;
+
 		this.janitor.bindToRenderStep("Input", Enum.RenderPriority.Input.Value, (dt) => this.translateObject(dt));
+
+		this.stateMachine.setPlacementInitialized(true);
+		this.signals.onInitiated.Fire();
 	}
 
 	public cancelPlacement(): void {
@@ -261,7 +290,8 @@ class PlacementClient {
 		}
 
 		let floorHeight = this.stateMachine.getYLevel();
-		floorHeight += math.floor(math.abs(SETTINGS.PLACEMENT_CONFIGS.integers.floorStep));
+		floorHeight++;
+		//floorHeight += math.floor(math.abs(SETTINGS.PLACEMENT_CONFIGS.integers.floorStep));
 		floorHeight = math.clamp(floorHeight, 0, SETTINGS.PLACEMENT_CONFIGS.integers.maxHeight);
 
 		this.stateMachine.setYLevel(floorHeight);
@@ -279,12 +309,34 @@ class PlacementClient {
 		}
 
 		let floorHeight = this.stateMachine.getYLevel();
-		floorHeight -= math.floor(math.abs(SETTINGS.PLACEMENT_CONFIGS.integers.floorStep));
+		floorHeight--;
+		//floorHeight -= math.floor(math.abs(SETTINGS.PLACEMENT_CONFIGS.integers.floorStep));
 		floorHeight = math.clamp(floorHeight, 0, SETTINGS.PLACEMENT_CONFIGS.integers.maxHeight);
 
 		this.stateMachine.setYLevel(floorHeight);
 
 		this.signals.onLevelChanged.Fire(floorHeight);
+	}
+
+	private rotate(): void {
+		if (this.state === PlacementState.INACTIVE) {
+			return;
+		}
+
+		let rotation = this.stateMachine.getRotation();
+		rotation += SETTINGS.PLACEMENT_CONFIGS.integers.rotationStep;
+
+		const rotateAmount = math.round(rotation / 90);
+
+		const isRotated = rotateAmount % 2 === 0;
+		if (rotation >= 360) {
+			rotation = 0;
+		}
+
+		this.stateMachine.setRotation(rotation);
+		this.stateMachine.setIsRotated(isRotated);
+
+		this.signals.onRotated.Fire(rotation);
 	}
 
 	public getPlatform(): Platform {
@@ -341,7 +393,6 @@ class PlacementClient {
 			return new CFrame();
 		}
 
-		const raycastParams = SETTINGS.PLACEMENT_CONFIGS.misc.defaultRaycastParams;
 		const gridSize = SETTINGS.PLACEMENT_CONFIGS.integers.gridSize;
 
 		const camera = Workspace.CurrentCamera ?? new Instance("Camera");
@@ -369,9 +420,12 @@ class PlacementClient {
 		let ray: RaycastResult | undefined, nilRay: Vector3;
 		let target: Instance;
 
+		const mouseLocation = this.mouse.getPosition();
+		const mouseRay = camera.ViewportPointToRay(mouseLocation.X, mouseLocation.Y, 5);
+
 		if (this.getPlatform() === Platform.MOBILE) {
 			const cameraPosition = camera.CFrame.Position;
-			ray = Workspace.Raycast(cameraPosition, camera.CFrame.LookVector.mul(RAY_RANGE), raycastParams);
+			ray = Workspace.Raycast(cameraPosition, camera.CFrame.LookVector.mul(RAY_RANGE), this.raycastParams);
 			nilRay = cameraPosition.add(
 				camera.CFrame.LookVector.mul(
 					SETTINGS.PLACEMENT_CONFIGS.integers.maxRaycastRange + platform.Size.X * 0.5 + platform.Size.Z * 0.5,
@@ -380,9 +434,9 @@ class PlacementClient {
 		} else {
 			// Not on Mobile
 			const mouseLocation = this.mouse.getPosition();
-			const unit = camera.ScreenPointToRay(mouseLocation.X, mouseLocation.Y, 1);
+			const unit = camera.ViewportPointToRay(mouseLocation.X, mouseLocation.Y, 0);
 
-			ray = Workspace.Raycast(unit.Origin, unit.Direction.mul(RAY_RANGE), raycastParams);
+			ray = Workspace.Raycast(unit.Origin, unit.Direction.mul(RAY_RANGE), this.raycastParams);
 			nilRay = unit.Origin.add(
 				unit.Direction.mul(
 					SETTINGS.PLACEMENT_CONFIGS.integers.maxRaycastRange + platform.Size.X * 0.5 + platform.Size.Z * 0.5,
@@ -394,6 +448,23 @@ class PlacementClient {
 			x = ray.Position.X - offsetX;
 			z = ray.Position.Z - offsetZ;
 			target = platform;
+
+			if (SETTINGS.PLACEMENT_CONFIGS.bools.visualizeRays) {
+				const part = visualizeRaycast(ray, mouseRay.Origin);
+				part.Parent = Workspace;
+				this.raycastParams.AddToFilter(part);
+
+				Promise.delay(2).then(() => {
+					const tween = TweenService.Create(part, new TweenInfo(1), { Transparency: 1 });
+					tween.Play();
+
+					const completed = tween.Completed.Connect(() => {
+						part.Destroy();
+						completed.Disconnect();
+					});
+				});
+			}
+
 			// if stackable ...
 		} else {
 			x = nilRay.X - offsetX;
@@ -404,7 +475,9 @@ class PlacementClient {
 		const platformCFrame = platform.CFrame;
 		const positionCFrame = new CFrame(x, 0, z).mul(new CFrame(offsetX, 0, offsetZ));
 
-		y = this.calculateYPosition(platform.Position.Y, platform.Size.Y, modelPrimaryPart.Size.Y, 1) + yLevel;
+		y =
+			this.calculateYPosition(platform.Position.Y, platform.Size.Y, modelPrimaryPart.Size.Y, 1) +
+			yLevel * SETTINGS.PLACEMENT_CONFIGS.integers.floorStep;
 
 		if (SETTINGS.PLACEMENT_CONFIGS.bools.moveByGrid === true) {
 			const relativeCFrame = platformCFrame.Inverse().mul(positionCFrame);

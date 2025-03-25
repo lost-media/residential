@@ -1,7 +1,11 @@
 import { Workspace } from "@rbxts/services";
 import { PLOT_STRUCTURES_FOLDER_NAME } from "../configs";
 
-export function hitboxIsCollidedInPlot(hitbox: BasePart, plot: PlotInstance, ignoreDescendants: Instance[]) {
+export function hitboxIsCollidedInPlot(
+	hitbox: BasePart,
+	plot: PlotInstance,
+	ignoreDescendants: Instance[] = [],
+): boolean {
 	if (hitbox === undefined) {
 		return false;
 	}

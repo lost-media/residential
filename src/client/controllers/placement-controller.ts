@@ -1,5 +1,5 @@
 import { KnitClient as Knit } from "@rbxts/knit";
-import PlacementClient from "client/lib/placement-client";
+import PlacementClient, { GlobalPlacementSettings } from "client/lib/placement-client";
 import { chooseRandomStructure } from "shared/lib/residential/structures/utils/choose-random-structure";
 import LoggerFactory from "shared/util/logger/factory";
 
@@ -17,12 +17,14 @@ const PlacementController = Knit.CreateController({
 
 		this.placeModel();
 
-		spawn(() => {
-			for (let i = 0; i < 50; i++) {
-				//print(this.placementClient.getRenderLoopAverageTime());
-				task.wait(5);
-			}
-		});
+		if (GlobalPlacementSettings.PLACEMENT_CONFIGS.bools.profileRenderStepped === true) {
+			spawn(() => {
+				for (let i = 0; i < 50; i++) {
+					print(this.placementClient.getRenderLoopAverageTime());
+					task.wait(5);
+				}
+			});
+		}
 	},
 
 	async placeModel(): Promise<void> {

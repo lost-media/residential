@@ -14,7 +14,7 @@ const SETTINGS = {
 	PLACEMENT_CONFIGS: {
 		// Bools
 		bools: {
-			profileRenderStepped: false,
+			profileRenderStepped: true,
 			enableAngleTilt: true,
 			enableFloors: true,
 			enableCollisions: true,
@@ -262,7 +262,7 @@ class PlacementClient {
 		// SETTING: sets the model's transparency relative to the transparencyDelta
 		if (SETTINGS.PLACEMENT_CONFIGS.bools.transparentModel === true) {
 			setModelRelativeTransparency(model, SETTINGS.PLACEMENT_CONFIGS.floats.transparencyDelta);
-			model.PrimaryPart.Transparency = 1;
+			model.PrimaryPart.Transparency = SETTINGS.PLACEMENT_CONFIGS.floats.hitboxTransparency;
 		}
 
 		if (SETTINGS.PLACEMENT_CONFIGS.bools.blackListCharacterForRaycast === true) {
@@ -278,7 +278,7 @@ class PlacementClient {
 		hitbox.ClearAllChildren();
 		this.stateMachine.setHitbox(hitbox);
 
-		hitbox.Transparency = SETTINGS.PLACEMENT_CONFIGS.floats.hitboxTransparency;
+		hitbox.Transparency = 1;
 		hitbox.Name = "Hitbox";
 		hitbox.Parent = model;
 
@@ -468,9 +468,11 @@ class PlacementClient {
 		if (SETTINGS.PLACEMENT_CONFIGS.bools.interpolate === true) {
 			const SPEED = 1;
 			const lerpFactor = SPEED * dt * SETTINGS.PLACEMENT_CONFIGS.integers.targetFps;
-			model.PivotTo(hitbox.CFrame.Lerp(calculatedPosition, lerpFactor));
+			model.PivotTo(modelPrimaryPart.CFrame.Lerp(calculatedPosition, lerpFactor));
+			hitbox.PivotTo(calculatedPosition);
 		} else {
 			model.PivotTo(calculatedPosition);
+			hitbox.PivotTo(calculatedPosition);
 		}
 	}
 
@@ -629,7 +631,6 @@ class PlacementClient {
 		const hitbox = this.stateMachine.getHitbox();
 		const model = this.stateMachine.getModel();
 		const plot = this.plot;
-		const character = Player.Character;
 
 		const structuresFolder = plot.FindFirstChild(PLOT_STRUCTURES_FOLDER_NAME);
 
@@ -638,69 +639,34 @@ class PlacementClient {
 		if (SETTINGS.PLACEMENT_CONFIGS.bools.enableCollisions === false) return false;
 		if (structuresFolder === undefined) return false;
 
-		this.state = PlacementState.MOVING;
+		this.state = PlacementState.MOVING as PlacementState;
 
-		const isColliding = hitboxIsCollidedInPlot(
-			hitbox,
-			[model, structuresFolder, character as Instance].filter((instance) => {
-				if (instance === character) {
-					if (SETTINGS.PLACEMENT_CONFIGS.bools.characterCollisions === false) {
-						return false;
-					}
-				}
-				return true;
-			}),
-		);
+		const isColliding = hitboxIsCollidedInPlot(hitbox, plot, this.mouse.getTargetFilter());
 
-		if (isColliding === true) {
+		if (isColliding === true && this.state !== PlacementState.COLLIDING) {
 			this.state = PlacementState.COLLIDING;
 			this.signals.onCollided.Fire();
 		}
 
 		return isColliding;
-
-		/*for (let i = 0; i < collisionPoints.size(); i++) {
-			const part = collisionPoints[i];
-
-			if (part.CanTouch === false) {
-				continue;
-			}
-
-			if (SETTINGS.PLACEMENT_CONFIGS.bools.characterCollisions === true) {
-				if (character !== undefined && !part.IsDescendantOf(character)) {
-					continue;
-				}
-			} else {
-				if (character !== undefined && part.IsDescendantOf(character)) {
-					continue;
-				}
-			}
-
-			if (part.IsDescendantOf(model) === true || part === plot.FindFirstChild(PLOT_STRUCTURES_FOLDER_NAME)) {
-				continue;
-			}
-
-			// at this point, the object is colliding with something else
-			this.state = PlacementState.COLLIDING;
-			this.signals.onCollided.Fire();
-			return true;
-		}
-
-		return false;
-		*/
 	}
 
 	private updateHitboxColor(): void {
+		const model = this.stateMachine.getModel();
 		const hitbox = this.stateMachine.getHitbox();
 
+		const modelPrimaryPart = model?.PrimaryPart;
+
+		if (model === undefined) return;
 		if (hitbox === undefined) return;
+		if (modelPrimaryPart === undefined) return;
 
 		let hitboxColor = SETTINGS.PLACEMENT_CONFIGS.colors.hitboxNonCollidingColor3;
 
 		if (this.state === PlacementState.COLLIDING || this.state === PlacementState.OUT_OF_RANGE) {
 			hitboxColor = SETTINGS.PLACEMENT_CONFIGS.colors.hitboxCollidingColor3;
 		}
-		hitbox.Color = hitboxColor;
+		modelPrimaryPart.Color = hitboxColor;
 	}
 
 	private visualizeRay(ray: RaycastResult, origin: Vector3): void {
@@ -751,3 +717,5 @@ class PlacementClient {
 }
 
 export default PlacementClient;
+
+export { SETTINGS as GlobalPlacementSettings };

@@ -1,9 +1,13 @@
 import { Workspace } from "@rbxts/services";
+import { PLOT_STRUCTURES_FOLDER_NAME } from "../configs";
 
-export function hitboxIsCollidedInPlot(hitbox: BasePart, ignoreDescendants: Instance[]) {
+export function hitboxIsCollidedInPlot(hitbox: BasePart, plot: PlotInstance, ignoreDescendants: Instance[]) {
 	if (hitbox === undefined) {
 		return false;
 	}
+
+	const structuresFolder = plot.FindFirstChild(PLOT_STRUCTURES_FOLDER_NAME);
+	if (structuresFolder === undefined) return false;
 
 	const collisionPoints = Workspace.GetPartsInPart(hitbox);
 
@@ -22,6 +26,10 @@ export function hitboxIsCollidedInPlot(hitbox: BasePart, ignoreDescendants: Inst
 		});
 
 		if (isInIgnoreList === true) {
+			continue;
+		}
+
+		if (part.IsDescendantOf(structuresFolder) !== true) {
 			continue;
 		}
 

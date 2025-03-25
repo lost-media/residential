@@ -121,7 +121,7 @@ function Mouse:getTarget()
 	return raycastResult and raycastResult.Instance or nil
 end
 
-function Mouse:GetTargetFilter()
+function Mouse:getTargetFilter()
 	return self.filterDescendants
 end
 

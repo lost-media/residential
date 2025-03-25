@@ -1,6 +1,6 @@
 import { Assert } from "@rbxts/lunit";
 import { LinkedList } from "shared/lib/data-structures/linked-list";
-import { PLOT_STRUCTURES_FOLDER_NAME } from "shared/lib/plot/configs";
+import { PLATFORM_INSTANCE_NAME, PLOT_STRUCTURES_FOLDER_NAME } from "shared/lib/plot/configs";
 import { hitboxIsCollidedInPlot } from "shared/lib/plot/utils/plot-collisions";
 import { IStructureInstance } from "shared/lib/residential/types";
 import { getAllCharacters } from "shared/util/character-utils";
@@ -122,8 +122,10 @@ export default class Plot {
 	 * @returns An object containing serialized data for the plot.
 	 */
 	public serialize(): object {
+		const platform = this.instance.FindFirstChild(PLATFORM_INSTANCE_NAME) as BasePart | undefined;
+
 		return {
-			structures: this.structureList.map((_, structure) => structure.serialize()),
+			structures: this.structureList.map((_, structure) => structure.serialize(platform?.CFrame)),
 		};
 	}
 }

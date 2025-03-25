@@ -64,6 +64,8 @@ const PlotService = Knit.CreateService({
 		// create a new UUID
 		const uuid = HttpService.GenerateGUID(false);
 		playersPlot.addStructure(new StructureInstance(uuid, structure), cframe);
+
+		print(playersPlot.serialize());
 	},
 
 	getPlotFromPlayer(player: Player): Optional<Plot> {

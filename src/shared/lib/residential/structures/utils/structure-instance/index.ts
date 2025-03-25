@@ -35,10 +35,12 @@ class StructureInstance implements IStructureInstance {
 		const relativeCFrame =
 			relativePlatformCFrame?.Inverse().mul(this.model?.GetPivot() ?? new CFrame()) ?? new CFrame();
 
+		const components = cframeComponentsToArray(relativeCFrame);
+
 		return {
 			uuid: this.uuid,
 			structure_id: this.structure.id,
-			cframe: cframeComponentsToArray(relativeCFrame),
+			cframe: components,
 
 			// any properties (i.e physical, metadata, etc) specific to this structure can go here
 		};

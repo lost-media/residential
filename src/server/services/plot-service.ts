@@ -49,6 +49,14 @@ const PlotService = Knit.CreateService({
 				);
 			}
 		});
+
+		playerService.addPlayerLeavingConnection((player: Player) => {
+			const plot = PlotFactory.getPlayersPlot(player);
+
+			if (plot !== undefined) {
+				plot.unassignPlayer();
+			}
+		});
 	},
 
 	placeStructure(player: Player, structureId: string, cframe: CFrame): void {
@@ -64,10 +72,6 @@ const PlotService = Knit.CreateService({
 		// create a new UUID
 		const uuid = HttpService.GenerateGUID(false);
 		playersPlot.addStructure(new StructureInstance(uuid, structure), cframe);
-	},
-
-	getPlotFromPlayer(player: Player): Optional<Plot> {
-		return PlotFactory.getPlots().find((plot) => plot.getPlayer() === player);
 	},
 });
 

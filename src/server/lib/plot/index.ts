@@ -72,11 +72,6 @@ export default class Plot {
 		}
 
 		this.clear();
-
-		Assert.empty(
-			this.instance[PLOT_STRUCTURES_FOLDER_NAME].GetChildren(),
-			() => `[Plot]: Object leak detected while unassigning player ${this.player?.Name}`,
-		);
 	}
 
 	/**
@@ -115,6 +110,11 @@ export default class Plot {
 		this.structureList.forEach((_, value) => {
 			value.destroy();
 		});
+
+		Assert.empty(
+			this.instance[PLOT_STRUCTURES_FOLDER_NAME].GetChildren(),
+			() => `[Plot]: Object leak detected while unassigning player ${this.player?.Name}`,
+		);
 	}
 
 	/**

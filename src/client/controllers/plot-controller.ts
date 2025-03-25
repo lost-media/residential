@@ -1,4 +1,5 @@
 import { KnitClient, Signal } from "@rbxts/knit";
+import LoggerFactory from "shared/util/logger/factory";
 
 const PlotController = KnitClient.CreateController({
 	Name: "PlotController",
@@ -26,7 +27,7 @@ const PlotController = KnitClient.CreateController({
 		const plotAssignedConnection = plotService.PlotAssigned.Connect(plotAssignedCallback);
 	},
 
-	getPlotAsync(): Promise<PlotInstance> {
+	async getPlotAsync(): Promise<PlotInstance> {
 		return new Promise((resolve) => {
 			if (this.plot !== undefined) {
 				resolve(this.plot);
@@ -34,6 +35,14 @@ const PlotController = KnitClient.CreateController({
 				const [res] = this.signals.plotAssigned.Wait();
 				resolve(res);
 			}
+		});
+	},
+
+	async placeStructure(structureId: string, cframe: CFrame): Promise<void> {
+		const plotService = KnitClient.GetService("PlotService");
+
+		plotService.placeStructurePromise(structureId, cframe).catch((e) => {
+			LoggerFactory.getLogger().log(`[PlotController:placeStructure]: Error from server: ${e}`);
 		});
 	},
 });

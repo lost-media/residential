@@ -1,6 +1,7 @@
 import type { IStructure, IStructureInstance } from "shared/lib/residential/types";
+import { cframeComponentsToArray } from "shared/util/cframe-utils";
 
-abstract class StructureInstance implements IStructureInstance {
+class StructureInstance implements IStructureInstance {
 	public uuid: string;
 	public structure: IStructure;
 	public model?: Model | undefined;
@@ -15,6 +16,7 @@ abstract class StructureInstance implements IStructureInstance {
 		if (this.model !== undefined) {
 			this.model.Destroy();
 		}
+		this.model = undefined;
 	}
 
 	public spawn(): Model;
@@ -25,7 +27,21 @@ abstract class StructureInstance implements IStructureInstance {
 			res.Parent = parent;
 		}
 
+		this.model = res;
 		return res;
+	}
+
+	public serialize(relativePlatformCFrame?: CFrame): object {
+		const relativeCFrame =
+			relativePlatformCFrame?.Inverse().mul(this.model?.GetPivot() ?? new CFrame()) ?? new CFrame();
+
+		return {
+			uuid: this.uuid,
+			structure_id: this.structure.id,
+			cframe: cframeComponentsToArray(relativeCFrame),
+
+			// any properties (i.e physical, metadata, etc) specific to this structure can go here
+		};
 	}
 }
 

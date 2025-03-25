@@ -61,7 +61,7 @@ export class RepeatableProfiler {
 	 * const profiler = new RepeatableProfiler();
 	 */
 	constructor(maxEntries?: number) {
-		this.maxEntries = maxEntries ?? 1000;
+		this.maxEntries = maxEntries ?? 50;
 		this.entries = new Array<number>(this.maxEntries);
 
 		this.isTracking = false;

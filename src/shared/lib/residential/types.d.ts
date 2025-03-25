@@ -41,4 +41,5 @@ export interface IStructureInstance {
 	spawn(parent?: Instance): Model;
 
 	destroy(): void;
+	serialize(relativePlatformCFrame?: CFrame): object;
 }

@@ -1,6 +1,5 @@
 import { KnitServer as Knit } from "@rbxts/knit";
 import { Players } from "@rbxts/services";
-import { LinkedList } from "shared/lib/data-structures/linked-list";
 
 const PlayerService = Knit.CreateService({
 	Name: "PlayerService",
@@ -35,8 +34,13 @@ const PlayerService = Knit.CreateService({
 		this.onPlayerJoinedCallbacks.push(callback);
 	},
 
-	addPlayerLeavingConnection<K extends defined>(callback: (player: Player) => void): void {
+	addPlayerLeavingConnection(callback: (player: Player) => void): void {
 		this.onPlayerLeavingCallbacks.push(callback);
+	},
+
+	getAllCharacters(): Character[] {
+		const players = Players.GetPlayers();
+		return players.map((player) => player.Character as Character).filter((character) => character !== undefined);
 	},
 });
 

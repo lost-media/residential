@@ -2,7 +2,7 @@ import { KnitServer } from "@rbxts/knit";
 import LoggerFactory, { LogLevel } from "shared/util/logger/factory";
 import { TestRunner } from "@rbxts/lunit";
 import { StructureCategories } from "shared/lib/residential/structures";
-import { weldModelToPrimaryPart } from "shared/util/instance-utils";
+import { initializeStructure } from "shared/lib/residential/structures/utils/initialize-structure-models";
 
 const TESTS_ENABLED = true;
 
@@ -22,11 +22,7 @@ KnitServer.Start()
 		// Weld all parts in structures
 		StructureCategories.forEach((_, category) => {
 			category.structures.forEach((structure) => {
-				try {
-					weldModelToPrimaryPart(structure.model);
-				} catch {
-					LoggerFactory.getLogger().log(`Failed to weld structure "${structure.name}"`, LogLevel.Error);
-				}
+				initializeStructure(structure);
 			});
 		});
 

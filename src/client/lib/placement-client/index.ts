@@ -8,6 +8,7 @@ import { Player } from "@rbxts/knit/Knit/KnitClient";
 import { visualizeRaycast } from "shared/util/raycast-utils";
 import { PLATFORM_INSTANCE_NAME, PLOT_STRUCTURES_FOLDER_NAME } from "shared/lib/plot/configs";
 import { RepeatableProfiler } from "shared/util/profiler";
+import { hitboxIsCollidedInPlot } from "shared/lib/plot/utils/plot-collisions";
 
 const SETTINGS = {
 	PLACEMENT_CONFIGS: {
@@ -37,7 +38,7 @@ const SETTINGS = {
 
 		// floats
 		floats: {
-			angleTiltAmplitude: 5.0,
+			angleTiltAmplitude: 2.0,
 			transparencyDelta: 0.6,
 			hitboxTransparency: 0.7,
 		},
@@ -53,15 +54,20 @@ const SETTINGS = {
 	},
 };
 
+class PlacementClientSettings {
+	public repeatPlacement: boolean = true;
+	public isStackable: boolean = false;
+}
+
 class PlacementClientSignals {
 	public onPlaced = new Signal<() => void>();
-	public onCollided = new Signal<(part: BasePart) => void>();
+	public onCollided = new Signal<() => void>();
 	public onRotated = new Signal<(rotation: number) => void>();
 	public onCancelled = new Signal<() => void>();
 	public onLevelChanged = new Signal<(level: number) => void>();
 	public outOfRange = new Signal<() => void>();
 	public onInitiated = new Signal<() => void>();
-	public onPlacementConfirmed = new Signal<() => void>();
+	public onPlacementConfirmed = new Signal<(cframe: CFrame) => void>();
 	public onDeleteStructure = new Signal<() => void>();
 }
 
@@ -190,6 +196,7 @@ class PlacementClient {
 	private plot: PlotInstance;
 	private state: PlacementState;
 
+	private settings: PlacementClientSettings;
 	private stateMachine: PlacementClientStateMachine;
 	private janitor: Trove;
 	private mouse: Mouse;
@@ -202,7 +209,11 @@ class PlacementClient {
 		this.plot = plot;
 		this.state = PlacementState.INACTIVE;
 
+		this.settings = new PlacementClientSettings();
+		this.settings.isStackable = this.settings.isStackable ?? false;
+
 		this.stateMachine = new PlacementClientStateMachine();
+
 		this.janitor = new Trove();
 		this.mouse = new Mouse();
 		this.raycastParams = new RaycastParams();
@@ -251,7 +262,7 @@ class PlacementClient {
 		// SETTING: sets the model's transparency relative to the transparencyDelta
 		if (SETTINGS.PLACEMENT_CONFIGS.bools.transparentModel === true) {
 			setModelRelativeTransparency(model, SETTINGS.PLACEMENT_CONFIGS.floats.transparencyDelta);
-			model.PrimaryPart.Transparency = 1;
+			model.PrimaryPart.Transparency = SETTINGS.PLACEMENT_CONFIGS.floats.hitboxTransparency;
 		}
 
 		if (SETTINGS.PLACEMENT_CONFIGS.bools.blackListCharacterForRaycast === true) {
@@ -267,13 +278,11 @@ class PlacementClient {
 		hitbox.ClearAllChildren();
 		this.stateMachine.setHitbox(hitbox);
 
-		hitbox.Transparency = SETTINGS.PLACEMENT_CONFIGS.floats.hitboxTransparency;
+		hitbox.Transparency = 1;
 		hitbox.Name = "Hitbox";
 		hitbox.Parent = model;
 
 		model.PrimaryPart.Anchored = false;
-
-		this.state = PlacementState.MOVING;
 
 		this.stateMachine.setinitialYPosition(
 			this.calculateYPosition(platform.Position.Y, platform.Size.Y, model.PrimaryPart.Size.Y, 1),
@@ -286,14 +295,14 @@ class PlacementClient {
 			if (processed === false) {
 				if (input.KeyCode === Enum.KeyCode.Q) {
 					this.raiseLevel();
-					print(this.stateMachine.getYLevel());
 				} else if (input.KeyCode === Enum.KeyCode.E) {
 					this.lowerLevel();
-					print(this.stateMachine.getYLevel());
 				} else if (input.KeyCode === Enum.KeyCode.R) {
 					this.rotate();
 				} else if (input.KeyCode === Enum.KeyCode.C) {
 					this.cancelPlacement();
+				} else if (input.UserInputType === Enum.UserInputType.MouseButton1) {
+					this.confirmPlacement();
 				}
 			}
 		});
@@ -303,6 +312,8 @@ class PlacementClient {
 
 		this.raycastParams.FilterDescendantsInstances = targetFilter;
 		this.raycastParams.FilterType = Enum.RaycastFilterType.Exclude;
+
+		this.state = PlacementState.MOVING;
 
 		this.janitor.bindToRenderStep("Input", Enum.RenderPriority.Input.Value, (dt) => {
 			// Profile the render stepped function
@@ -321,6 +332,28 @@ class PlacementClient {
 		return this.profiler.getAverageTime();
 	}
 
+	public confirmPlacement(): void {
+		if (this.state !== PlacementState.MOVING) return;
+
+		const model = this.stateMachine.getModel();
+
+		if (model === undefined) return;
+
+		const finalCFrame = this.getFinalCFrame();
+		const isColliding = this.updateHitboxCollisions();
+
+		if (isColliding === true) {
+			print("COLLIDING, CANNOT PLACE!");
+			return;
+		}
+
+		if (this.settings.repeatPlacement === false) {
+			this.cancelPlacement();
+		}
+
+		this.signals.onPlacementConfirmed.Fire(finalCFrame);
+	}
+
 	public cancelPlacement(): void {
 		if (this.state === PlacementState.INACTIVE) {
 			return;
@@ -328,7 +361,7 @@ class PlacementClient {
 
 		// Set the state to inactive
 		this.state = PlacementState.INACTIVE;
-		this.janitor.destroy();
+		this.janitor.clean();
 
 		// reset states to their original values
 		this.stateMachine.reset();
@@ -336,11 +369,24 @@ class PlacementClient {
 		this.signals.onCancelled.Fire();
 	}
 
-	public isPlacing(): boolean {
-		return this.state !== PlacementState.MOVING;
+	public isMoving(): boolean {
+		return this.state === PlacementState.MOVING;
 	}
 
-	public raiseLevel(): void {
+	public getPlatform(): Platform {
+		const isXBOX = UserInputService.GamepadEnabled;
+		const isMobile = UserInputService.TouchEnabled;
+
+		if (isMobile === true) {
+			return Platform.MOBILE;
+		} else if (isXBOX === true) {
+			return Platform.CONSOLE;
+		} else {
+			return Platform.PC;
+		}
+	}
+
+	private raiseLevel(): void {
 		if (this.state === PlacementState.INACTIVE) {
 			return;
 		}
@@ -351,7 +397,6 @@ class PlacementClient {
 
 		let floorHeight = this.stateMachine.getYLevel();
 		floorHeight++;
-		//floorHeight += math.floor(math.abs(SETTINGS.PLACEMENT_CONFIGS.integers.floorStep));
 		floorHeight = math.clamp(floorHeight, 0, SETTINGS.PLACEMENT_CONFIGS.integers.maxHeight);
 
 		this.stateMachine.setYLevel(floorHeight);
@@ -359,7 +404,7 @@ class PlacementClient {
 		this.signals.onLevelChanged.Fire(floorHeight);
 	}
 
-	public lowerLevel(): void {
+	private lowerLevel(): void {
 		if (this.state === PlacementState.INACTIVE) {
 			return;
 		}
@@ -370,7 +415,6 @@ class PlacementClient {
 
 		let floorHeight = this.stateMachine.getYLevel();
 		floorHeight--;
-		//floorHeight -= math.floor(math.abs(SETTINGS.PLACEMENT_CONFIGS.integers.floorStep));
 		floorHeight = math.clamp(floorHeight, 0, SETTINGS.PLACEMENT_CONFIGS.integers.maxHeight);
 
 		this.stateMachine.setYLevel(floorHeight);
@@ -399,19 +443,6 @@ class PlacementClient {
 		this.signals.onRotated.Fire(rotation);
 	}
 
-	public getPlatform(): Platform {
-		const isXBOX = UserInputService.GamepadEnabled;
-		const isMobile = UserInputService.TouchEnabled;
-
-		if (isMobile === true) {
-			return Platform.MOBILE;
-		} else if (isXBOX === true) {
-			return Platform.CONSOLE;
-		} else {
-			return Platform.PC;
-		}
-	}
-
 	private translateObject(dt: number) {
 		// This function should be as optimized as possible because it runs every frame
 		if (this.state === PlacementState.PLACING || this.state === PlacementState.INACTIVE) return;
@@ -432,18 +463,20 @@ class PlacementClient {
 			this.updateHitboxColor();
 		}
 
-		const calculatedPosition = this.calculateModelCFrame(modelPrimaryPart.CFrame);
+		const calculatedPosition = this.calculateModelCFrame(hitbox.CFrame);
 
 		if (SETTINGS.PLACEMENT_CONFIGS.bools.interpolate === true) {
 			const SPEED = 1;
 			const lerpFactor = SPEED * dt * SETTINGS.PLACEMENT_CONFIGS.integers.targetFps;
-			model.PivotTo(hitbox.CFrame.Lerp(calculatedPosition, lerpFactor));
+			model.PivotTo(modelPrimaryPart.CFrame.Lerp(calculatedPosition, lerpFactor));
+			hitbox.PivotTo(calculatedPosition);
 		} else {
-			model?.PivotTo(calculatedPosition);
+			model.PivotTo(calculatedPosition);
+			hitbox.PivotTo(calculatedPosition);
 		}
 	}
 
-	private calculateModelCFrame(lastCFrame: CFrame): CFrame {
+	private calculateModelCFrame(lastCFrame?: CFrame): CFrame {
 		const RAY_RANGE = 10000;
 
 		const isRotated = this.stateMachine.getIsRotated();
@@ -547,7 +580,7 @@ class PlacementClient {
 
 		y = math.clamp(y, initialY, SETTINGS.PLACEMENT_CONFIGS.integers.maxHeight + initialY);
 
-		if (SETTINGS.PLACEMENT_CONFIGS.bools.interpolate === false) {
+		if (SETTINGS.PLACEMENT_CONFIGS.bools.enableAngleTilt === false || lastCFrame === undefined) {
 			return finalC
 				.mul(new CFrame(0, y - platform.Position.Y, 0))
 				.mul(CFrame.fromEulerAnglesXYZ(0, (this.stateMachine.getRotation() * math.pi) / 180, 0));
@@ -593,68 +626,47 @@ class PlacementClient {
 	 * @returns true if the current model and hitbox are colliding with an unknown object
 	 */
 	private updateHitboxCollisions(): boolean {
+		if (this.state !== PlacementState.MOVING && this.state !== PlacementState.COLLIDING) return false;
+
 		const hitbox = this.stateMachine.getHitbox();
 		const model = this.stateMachine.getModel();
 		const plot = this.plot;
-		const character = Player.Character;
 
-		if (hitbox === undefined) {
-			return false;
-		}
+		const structuresFolder = plot.FindFirstChild(PLOT_STRUCTURES_FOLDER_NAME);
 
-		if (model === undefined) {
-			return false;
-		}
+		if (hitbox === undefined) return false;
+		if (model === undefined) return false;
+		if (SETTINGS.PLACEMENT_CONFIGS.bools.enableCollisions === false) return false;
+		if (structuresFolder === undefined) return false;
 
-		if (SETTINGS.PLACEMENT_CONFIGS.bools.enableCollisions === false) {
-			return false;
-		}
+		this.state = PlacementState.MOVING as PlacementState;
 
-		this.state = PlacementState.MOVING;
+		const isColliding = hitboxIsCollidedInPlot(hitbox, plot, this.mouse.getTargetFilter());
 
-		const collisionPoints = Workspace.GetPartsInPart(hitbox);
-
-		for (let i = 0; i < collisionPoints.size(); i++) {
-			const part = collisionPoints[i];
-
-			if (part.CanTouch === false) {
-				continue;
-			}
-
-			if (SETTINGS.PLACEMENT_CONFIGS.bools.characterCollisions === true) {
-				if (character !== undefined && !part.IsDescendantOf(character)) {
-					continue;
-				}
-			} else {
-				if (character !== undefined && part.IsDescendantOf(character)) {
-					continue;
-				}
-			}
-
-			if (part.IsDescendantOf(model) === true || part === plot.FindFirstChild(PLOT_STRUCTURES_FOLDER_NAME)) {
-				continue;
-			}
-
-			// at this point, the object is colliding with something else
+		if (isColliding === true && this.state !== PlacementState.COLLIDING) {
 			this.state = PlacementState.COLLIDING;
-			this.signals.onCollided.Fire(part);
-			return true;
+			this.signals.onCollided.Fire();
 		}
 
-		return false;
+		return isColliding;
 	}
 
 	private updateHitboxColor(): void {
+		const model = this.stateMachine.getModel();
 		const hitbox = this.stateMachine.getHitbox();
 
+		const modelPrimaryPart = model?.PrimaryPart;
+
+		if (model === undefined) return;
 		if (hitbox === undefined) return;
+		if (modelPrimaryPart === undefined) return;
 
 		let hitboxColor = SETTINGS.PLACEMENT_CONFIGS.colors.hitboxNonCollidingColor3;
 
 		if (this.state === PlacementState.COLLIDING || this.state === PlacementState.OUT_OF_RANGE) {
 			hitboxColor = SETTINGS.PLACEMENT_CONFIGS.colors.hitboxCollidingColor3;
 		}
-		hitbox.Color = hitboxColor;
+		modelPrimaryPart.Color = hitboxColor;
 	}
 
 	private visualizeRay(ray: RaycastResult, origin: Vector3): void {
@@ -698,6 +710,12 @@ class PlacementClient {
 			.Inverse()
 			.mul(CFrame.fromEulerAnglesXYZ(0, preCalc, 0));
 	}
+
+	private getFinalCFrame(): CFrame {
+		return this.calculateModelCFrame(undefined);
+	}
 }
 
 export default PlacementClient;
+
+export { SETTINGS as GlobalPlacementSettings };

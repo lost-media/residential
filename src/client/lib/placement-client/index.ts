@@ -8,6 +8,7 @@ import { Player } from "@rbxts/knit/Knit/KnitClient";
 import { visualizeRaycast } from "shared/util/raycast-utils";
 import { PLATFORM_INSTANCE_NAME, PLOT_STRUCTURES_FOLDER_NAME } from "shared/lib/plot/configs";
 import { RepeatableProfiler } from "shared/util/profiler";
+import { hitboxIsCollidedInPlot } from "shared/lib/plot/utils/plot-collisions";
 
 const SETTINGS = {
 	PLACEMENT_CONFIGS: {
@@ -60,7 +61,7 @@ class PlacementClientSettings {
 
 class PlacementClientSignals {
 	public onPlaced = new Signal<() => void>();
-	public onCollided = new Signal<(part: BasePart) => void>();
+	public onCollided = new Signal<() => void>();
 	public onRotated = new Signal<(rotation: number) => void>();
 	public onCancelled = new Signal<() => void>();
 	public onLevelChanged = new Signal<(level: number) => void>();
@@ -630,23 +631,35 @@ class PlacementClient {
 		const plot = this.plot;
 		const character = Player.Character;
 
-		if (hitbox === undefined) {
-			return false;
-		}
+		const structuresFolder = plot.FindFirstChild(PLOT_STRUCTURES_FOLDER_NAME);
 
-		if (model === undefined) {
-			return false;
-		}
-
-		if (SETTINGS.PLACEMENT_CONFIGS.bools.enableCollisions === false) {
-			return false;
-		}
+		if (hitbox === undefined) return false;
+		if (model === undefined) return false;
+		if (SETTINGS.PLACEMENT_CONFIGS.bools.enableCollisions === false) return false;
+		if (structuresFolder === undefined) return false;
 
 		this.state = PlacementState.MOVING;
 
-		const collisionPoints = Workspace.GetPartsInPart(hitbox);
+		const isColliding = hitboxIsCollidedInPlot(
+			hitbox,
+			[model, structuresFolder, character as Instance].filter((instance) => {
+				if (instance === character) {
+					if (SETTINGS.PLACEMENT_CONFIGS.bools.characterCollisions === false) {
+						return false;
+					}
+				}
+				return true;
+			}),
+		);
 
-		for (let i = 0; i < collisionPoints.size(); i++) {
+		if (isColliding === true) {
+			this.state = PlacementState.COLLIDING;
+			this.signals.onCollided.Fire();
+		}
+
+		return isColliding;
+
+		/*for (let i = 0; i < collisionPoints.size(); i++) {
 			const part = collisionPoints[i];
 
 			if (part.CanTouch === false) {
@@ -669,11 +682,12 @@ class PlacementClient {
 
 			// at this point, the object is colliding with something else
 			this.state = PlacementState.COLLIDING;
-			this.signals.onCollided.Fire(part);
+			this.signals.onCollided.Fire();
 			return true;
 		}
 
 		return false;
+		*/
 	}
 
 	private updateHitboxColor(): void {

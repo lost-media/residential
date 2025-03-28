@@ -1,10 +1,9 @@
-import { TweenService, UserInputService, Workspace } from "@rbxts/services";
+import { Players, TweenService, UserInputService, Workspace } from "@rbxts/services";
 import { PlacementState, Platform, ModelSettings } from "./types";
-import { Signal } from "@rbxts/knit";
+import Signal from "@rbxts/signal";
 import { setModelAnchored, setModelCanCollide, setModelRelativeTransparency } from "shared/util/instance-utils";
 import { Trove } from "@rbxts/trove";
 import Mouse from "../mouse";
-import { Player } from "@rbxts/knit/Knit/KnitClient";
 import { visualizeRaycast } from "shared/util/raycast-utils";
 import { PLATFORM_INSTANCE_NAME, PLOT_STRUCTURES_FOLDER_NAME } from "shared/lib/plot/configs";
 import { RepeatableProfiler } from "shared/util/profiler";
@@ -231,6 +230,7 @@ class PlacementClient {
 			`[PlacementClient:initiatePlacement]: The model to place DOES NOT have a primary part`,
 		);
 
+		const player = Players.LocalPlayer;
 		const platform = this.plot.WaitForChild(PLATFORM_INSTANCE_NAME) as BasePart | undefined;
 
 		const targetFilter = new Array<Instance>();
@@ -266,8 +266,8 @@ class PlacementClient {
 		}
 
 		if (SETTINGS.PLACEMENT_CONFIGS.bools.blackListCharacterForRaycast === true) {
-			if (Player.Character !== undefined) {
-				targetFilter.push(Player.Character);
+			if (player.Character !== undefined) {
+				targetFilter.push(player.Character);
 			}
 		}
 

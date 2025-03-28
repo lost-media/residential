@@ -1,4 +1,3 @@
-import { KnitServer } from "@rbxts/knit";
 import LoggerFactory, { LogLevel } from "shared/util/logger/factory";
 import { TestRunner } from "@rbxts/lunit";
 import { StructureCategories } from "shared/lib/residential/structures";
@@ -6,25 +5,16 @@ import { initializeStructure } from "shared/lib/residential/structures/utils/ini
 import { Flamework } from "@flamework/core";
 
 const TESTS_ENABLED = true;
-
-const serverTestsFolder = script.FindFirstChild("tests");
-const serverUnitTestsFolder = serverTestsFolder?.FindFirstChild("unit");
-
-const SERVICES_FOLDER = script.FindFirstChild("services");
-
-if (SERVICES_FOLDER !== undefined) {
-	KnitServer.AddServicesDeep(SERVICES_FOLDER);
-}
+const serverUnitTestsFolder = script.FindFirstChild("tests");
 
 // Add all paths to Flamework here
 Flamework.addPaths("src/server/services");
 Flamework.addPaths("src/shared/networking");
 
-Flamework.ignite();
+try {
+	Flamework.ignite();
 
-KnitServer.Start()
-	.andThen(async () => {
-		LoggerFactory.getLogger().log("Server started", LogLevel.Info);
+	LoggerFactory.getLogger().log("Server started", LogLevel.Info);
 
 		// Weld all parts in structures
 		StructureCategories.forEach((_, category) => {
@@ -40,14 +30,16 @@ KnitServer.Start()
 			// Run tests here
 			if (serverUnitTestsFolder !== undefined) {
 				const testRunner = new TestRunner([serverUnitTestsFolder]);
-				await testRunner.run().catch((e) => {
+				testRunner.run()
+				.then(() => {
+					LoggerFactory.getLogger().log("Tests complete", LogLevel.Info);
+				})
+				.catch((e) => {
 					LoggerFactory.getLogger().log(`Failed to run tests: ${e}`, LogLevel.Error);
-				});
+				})
 			}
-
-			LoggerFactory.getLogger().log("Tests complete", LogLevel.Info);
 		}
-	})
-	.catch((e) => {
-		LoggerFactory.getLogger().log(`Server failed to start ${e}`, LogLevel.Error);
-	});
+}
+catch (e) {
+	LoggerFactory.getLogger().log(`Server failed to start ${e}`, LogLevel.Error);
+}

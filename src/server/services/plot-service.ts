@@ -2,12 +2,13 @@ import { Service, OnInit, OnStart } from "@flamework/core";
 import { Workspace } from "@rbxts/services";
 import PlotFactory from "server/lib/plot/factory";
 import LoggerFactory, { LogLevel } from "shared/util/logger/factory";
-import { PlayerService } from "./test-player-service";
+import { PlayerService } from "./player-service";
 import { serverEvents } from "server/utils/networking";
 import Signal from "@rbxts/signal";
 import Plot from "server/lib/plot";
 import { getStructureById } from "shared/lib/residential/structures/utils/get-structures";
 import StructureInstance from "shared/lib/residential/structures/utils/structure-instance";
+import { DataService } from "./data/data-service";
 
 @Service()
 export class PlotService implements OnInit, OnStart {
@@ -15,7 +16,7 @@ export class PlotService implements OnInit, OnStart {
         onPlotAssigned: new Signal<(player: Player, plot: Plot) => void>(),
     };
 
-    constructor(private playerService: PlayerService) {}
+    constructor(private playerService: PlayerService, private dataService: DataService) {}
 
     public onInit(): void | Promise<void> {
         const plotsFolder = Workspace.FindFirstChild("Plots");
@@ -74,8 +75,7 @@ export class PlotService implements OnInit, OnStart {
 		);
 
 		// create a new UUID if one doesn't exist
-		//const dataService = Knit.GetService("DataService");
-		const uuid = structureUUID ?? "";
+		const uuid = structureUUID ?? this.dataService.generateUUID();
 		playersPlot.addStructure(new StructureInstance(uuid, structure), cframe);
 	}
 }

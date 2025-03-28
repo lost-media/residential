@@ -7,60 +7,56 @@ import { Profile } from "server/lib/profile-store/types";
 import LoggerFactory from "shared/util/logger/factory";
 
 type PlotProfileStore = {
-    [uuid: string]: SerializedPlot[];
+	[uuid: string]: SerializedPlot[];
 };
 
 const DataService = Knit.CreateService({
-    Name: "DataService",
+	Name: "DataService",
 
-    plotProfileStore: new ProfileStore<PlotProfileStore>("plots", {}),
-    playerDataMap: new Map<Player, Profile<PlotProfileStore> | undefined>(),
-    
-    KnitStart() {
-        const playerService = Knit.GetService("PlayerService");
+	plotProfileStore: new ProfileStore<PlotProfileStore>("plots", {}),
+	playerDataMap: new Map<Player, Profile<PlotProfileStore> | undefined>(),
 
-        playerService.addPlayerJoinConnection((player) => {
-            const newProfile = this.plotProfileStore.StartSessionAsync(`${player.UserId}`, {
-                Cancel: () => player.Parent !== Players,
-            })
+	KnitStart() {
+		const playerService = Knit.GetService("PlayerService");
 
-            if (newProfile !== undefined) {
-                newProfile.AddUserId(player.UserId);
-                newProfile.Reconcile();
+		playerService.addPlayerJoinConnection((player) => {
+			const newProfile = this.plotProfileStore.StartSessionAsync(`${player.UserId}`, {
+				Cancel: () => player.Parent !== Players,
+			});
 
-                newProfile.OnSessionEnd.Connect(() => {
-                    this.playerDataMap.delete(player);
-                    player.Kick(`[DataService]: Profile session ended`);
-                })
+			if (newProfile !== undefined) {
+				newProfile.AddUserId(player.UserId);
+				newProfile.Reconcile();
 
-                if (player.Parent === Players) {
-                    this.playerDataMap.set(player, newProfile);
-                    LoggerFactory.getLogger().log(`Player ${player.Name}'s profile loaded`, undefined, "DataService");
-                }
-                else {
-                    // For some reason, the player's parent is not the Player service
-                    // Could be because the user left before the session could be created
-                    newProfile.EndSession();
-                }
-            }
-            else {
-                // handle this
-            }
-        })
-    },
+				newProfile.OnSessionEnd.Connect(() => {
+					this.playerDataMap.delete(player);
+					player.Kick(`[DataService]: Profile session ended`);
+				});
 
-    createNewSaveFile(player: Player): void {
-        // create a new UUID
-        const uuid = HttpService.GenerateGUID(false);
+				if (player.Parent === Players) {
+					this.playerDataMap.set(player, newProfile);
+					LoggerFactory.getLogger().log(`Player ${player.Name}'s profile loaded`, undefined, "DataService");
+				} else {
+					// For some reason, the player's parent is not the Player service
+					// Could be because the user left before the session could be created
+					newProfile.EndSession();
+				}
+			} else {
+				// handle this
+			}
+		});
+	},
 
-        // generate an empty save file
-        
-    },
+	createNewSaveFile(player: Player): void {
+		// create a new UUID
+		const uuid = HttpService.GenerateGUID(false);
 
-    loadSaveFile(player: Player, uuid: string): void {
-        // get the player's uuids
-        
-    }
+		// generate an empty save file
+	},
+
+	loadSaveFile(player: Player, uuid: string): void {
+		// get the player's uuids
+	},
 });
 
 export = DataService;

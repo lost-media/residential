@@ -25,10 +25,8 @@ const PlayerService = Knit.CreateService({
 
 	addPlayerJoinConnection(callback: (player: Player) => void): void {
 		// If there are players in the server before the event begins, call the callback for each player
-		spawn(() => {
-			Players.GetPlayers().forEach((player) => {
-				callback(player);
-			});
+		Players.GetPlayers().forEach((player) => {
+			task.spawn(callback, player);
 		});
 
 		this.onPlayerJoinedCallbacks.push(callback);

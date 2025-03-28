@@ -32,8 +32,7 @@ class StructureInstance implements IStructureInstance {
 	}
 
 	public serialize(relativePlatformCFrame?: CFrame): SerializedStructureInstance {
-		const relativeCFrame =
-			relativePlatformCFrame?.Inverse().mul(this.model?.GetPivot() ?? new CFrame());
+		const relativeCFrame = relativePlatformCFrame?.Inverse().mul(this.model?.GetPivot() ?? new CFrame());
 
 		return {
 			uuid: this.uuid,

@@ -5,7 +5,7 @@ import { hitboxIsCollidedInPlot } from "shared/lib/plot/utils/plot-collisions";
 import { IStructureInstance, SerializedStructureInstance } from "shared/lib/residential/types";
 import { getAllCharacters } from "shared/util/character-utils";
 
-export type SerializedPlot = {
+export type SerializedPlotInstance = {
 	structures: SerializedStructureInstance[];
 };
 
@@ -125,7 +125,7 @@ export default class Plot {
 	 * Serializes the plot's data, including all structures, into an object.
 	 * @returns An object containing serialized data for the plot.
 	 */
-	public serialize(): SerializedPlot {
+	public serialize(): SerializedPlotInstance {
 		const platform = this.instance.FindFirstChild(PLATFORM_INSTANCE_NAME) as BasePart | undefined;
 		const platformCFrame = platform?.CFrame;
 

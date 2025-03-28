@@ -24,7 +24,7 @@ const PlotController = KnitClient.CreateController({
 			this.signals.plotAssigned.Fire(plot);
 		};
 
-		const plotAssignedConnection = plotService.PlotAssigned.Connect(plotAssignedCallback);
+		const plotAssignedConnection = plotService.plotAssigned.Connect(plotAssignedCallback);
 	},
 
 	async getPlotAsync(): Promise<PlotInstance> {

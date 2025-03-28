@@ -33,7 +33,7 @@ export interface IStructureCategory {
 
 export type SerializedStructureInstance = {
 	uuid: string;
-	structure_id: string;
+	structureId: string;
 	cframe?: Array<number>;
 };
 

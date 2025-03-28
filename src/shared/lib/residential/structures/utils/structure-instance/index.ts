@@ -36,7 +36,7 @@ class StructureInstance implements IStructureInstance {
 
 		return {
 			uuid: this.uuid,
-			structure_id: this.structure.id,
+			structureId: this.structure.id,
 			cframe: relativeCFrame !== undefined ? cframeComponentsToArray(relativeCFrame) : undefined,
 
 			// any properties (i.e physical, metadata, etc) specific to this structure can go here

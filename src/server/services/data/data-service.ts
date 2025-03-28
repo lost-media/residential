@@ -3,93 +3,118 @@ import { HttpService, Players } from "@rbxts/services";
 import type { ProfileStore as ProfileStoreType, Profile } from "server/lib/profile-store/types";
 import LoggerFactory from "shared/util/logger/factory";
 
+type AddStoreOptions =
+	| {
+			attachesToPlayer: true;
+			profileKeyGenerator: (player: Player) => string;
+	  }
+	| {
+			attachesToPlayer: false;
+			profileKeyGenerator: () => string;
+	  };
+
 const DataService = Knit.CreateService({
 	Name: "DataService",
 
 	dataStoreMap: new Map<ProfileKey, ProfileStoreType<ProfileStores[ProfileKey]>>(),
-	playerDataMap: new Map<Player, Map<ProfileKey, Profile<ProfileStores[ProfileKey]> | undefined>>(),
+	playerSessions: new Map<Player, Map<ProfileKey, Profile<ProfileStores[ProfileKey]> | undefined>>(),
 
 	KnitStart() {
 		const playerService = Knit.GetService("PlayerService");
 
 		playerService.addPlayerLeavingConnection((player) => {
-			const profiles = this.playerDataMap.get(player);
-
-			profiles?.forEach((profile) => {
-				if (profile !== undefined) {
-					profile.EndSession();
-				}
-			});
-
-			LoggerFactory.getLogger().log(`Ended Player ${player.Name}'s session`, undefined, "DataService");
+			this.endPlayerSessions(player);
 		});
 	},
 
-	addStore<K extends ProfileKey>(store: ProfileStoreType<ProfileStores[K]>): void {
-		// Make sure key doesn't override existing entry
-		assert(this.dataStoreMap.has(store.Name) === false);
+	endPlayerSessions(player: Player): void {
+		const profiles = this.playerSessions.get(player);
 
+		profiles?.forEach((profile) => {
+			if (profile !== undefined) {
+				profile.EndSession();
+			}
+		})
+
+		LoggerFactory.getLogger().log(`Ended Player ${player.Name}'s session`, undefined, "DataService");
+	},
+
+	addStore<K extends ProfileKey>(
+		store: ProfileStoreType<ProfileStores[K]>,
+		options: Partial<AddStoreOptions>,
+	): void {
+        assert(!this.dataStoreMap.has(store.Name), `Store with name "${store.Name}" already exists.`);
 		this.dataStoreMap.set(store.Name, store);
 
-		const playerService = Knit.GetService("PlayerService");
+		if (options.attachesToPlayer === true) {
+			this.attachStoreToPlayers(store, options.profileKeyGenerator ?? this.getPlayerProfileKey)
+		} else {
+			// doesn't attach to player
+		}
+	},
 
-		playerService.addPlayerJoinConnection((player) => {
-			this.playerDataMap.set(player, new Map<ProfileKey, Profile<ProfileStores[ProfileKey]>>());
+	attachStoreToPlayers<K extends ProfileKey>(
+        store: ProfileStoreType<ProfileStores[K]>,
+        profileKeyGenerator: (player: Player) => string,
+    ) {
+        const playerService = Knit.GetService("PlayerService");
 
-			const newProfile = store.StartSessionAsync(this.getProfileKey(player), {
-				Cancel: () => player.Parent !== Players,
-			});
+        playerService.addPlayerJoinConnection((player) => {
+            this.playerSessions.set(player, new Map<ProfileKey, Profile<ProfileStores[ProfileKey]>>());
 
-			if (newProfile !== undefined) {
-				newProfile.AddUserId(player.UserId);
-				newProfile.Reconcile();
+            const newProfile = store.StartSessionAsync(profileKeyGenerator(player), {
+                Cancel: () => player.Parent !== Players,
+            });
 
-				newProfile.OnSessionEnd.Connect(() => {
-					this.playerDataMap.delete(player);
-					player.Kick(`[DataService]: Profile session ended`);
-				});
+            if (newProfile !== undefined) {
+                this.setupPlayerProfile(player, store.Name, newProfile);
+            }
+        });
+    },
 
-				if (player.Parent === Players) {
-					const playerMap = this.playerDataMap.get(player);
+	setupPlayerProfile<K extends ProfileKey>(
+        player: Player,
+        storeName: K,
+        profile: Profile<ProfileStores[K]>,
+    ) {
+        profile.AddUserId(player.UserId);
+        profile.Reconcile();
 
-					if (playerMap !== undefined) {
-						playerMap.set(store.Name, newProfile);
-					} else {
-						const newMap = new Map<ProfileKey, Profile<ProfileStores[K]>>();
-						newMap.set(store.Name, newProfile);
-						this.playerDataMap.set(player, newMap);
-					}
+        profile.OnSessionEnd.Connect(() => {
+            this.playerSessions.delete(player);
+            player.Kick(`[DataService]: Profile session ended`);
+        });
 
-					LoggerFactory.getLogger().log(`Player ${player.Name}'s profile loaded`, undefined, "DataService");
-				} else {
-					// For some reason, the player's parent is not the Player service
-					// Could be because the user left before the session could be created
-					newProfile.EndSession();
-				}
-			} else {
-				// handle this
-			}
-		});
+        if (player.Parent === Players) {
+            const playerMap = this.playerSessions.get(player) ?? new Map<ProfileKey, Profile<ProfileStores[K]>>();
+            playerMap.set(storeName, profile);
+            this.playerSessions.set(player, playerMap);
+
+            LoggerFactory.getLogger().log(`Player ${player.Name}'s profile loaded`, undefined, "DataService");
+        } else {
+            profile.EndSession();
+        }
+    },
+
+	getProfile<K extends ProfileKey>(storeKey: K, profileKey: string): Optional<Profile<ProfileStores[K]>> {
+		const store = this.dataStoreMap.get(storeKey);
+
+		if (store !== undefined) {
+			return store.GetAsync(profileKey);
+		}
+
+		return undefined;
 	},
 
 	getStore<K extends ProfileKey>(key: K): Optional<ProfileStoreType<ProfileStores[K]>> {
 		return this.dataStoreMap.get(key);
 	},
 
-	getProfile<K extends ProfileKey>(player: Player, storeKey: ProfileKey): Optional<Profile<ProfileStores[K]>> {
-		const profiles = this.playerDataMap.get(player);
-		if (profiles !== undefined) {
-			return profiles.get(storeKey);
-		}
-
-		return undefined;
-	},
-
 	generateUUID(): string {
 		return HttpService.GenerateGUID(false);
 	},
 
-	getProfileKey(player: Player): string {
+	getPlayerProfileKey(player: Player): string {
 		return `${player.UserId}`;
 	},
 });

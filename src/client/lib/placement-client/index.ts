@@ -14,7 +14,7 @@ const SETTINGS = {
 	PLACEMENT_CONFIGS: {
 		// Bools
 		bools: {
-			profileRenderStepped: true,
+			profileRenderStepped: false,
 			enableAngleTilt: true,
 			enableFloors: true,
 			enableCollisions: true,

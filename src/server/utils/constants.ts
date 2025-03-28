@@ -1,0 +1,1 @@
+export const PLOT_PROFILE_STORE_KEY = "PLOT_PROFILE";

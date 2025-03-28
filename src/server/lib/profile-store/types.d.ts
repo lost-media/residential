@@ -9,8 +9,8 @@ export class Connection {
 export type JSONAcceptable = JSONAcceptable[] | { [key: string]: JSONAcceptable } | number | string | boolean | buffer;
 
 export interface Profile<T> {
-	Data: T & JSONAcceptable;
-	LastSavedData: T & JSONAcceptable;
+	Data: T;
+	LastSavedData: T;
 	FirstSessionTime: number;
 	SessionLoadCount: number;
 	Session?: { PlaceId: number; JobId: string };
@@ -39,7 +39,7 @@ export interface VersionQuery<T> {
 }
 
 export interface ProfileStore<T> {
-	Name: string;
+	Name: ProfileKey;
 	StartSessionAsync(
 		profileKey: string,
 		params: Partial<{

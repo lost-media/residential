@@ -1,7 +1,5 @@
 import { KnitServer as Knit, RemoteSignal } from "@rbxts/knit";
-import { Player } from "@rbxts/knit/Knit/KnitClient";
-import { HttpService, Workspace } from "@rbxts/services";
-import Plot from "server/lib/plot";
+import { Workspace } from "@rbxts/services";
 import PlotFactory from "server/lib/plot/factory";
 import { getStructureById } from "shared/lib/residential/structures/utils/get-structures";
 import StructureInstance from "shared/lib/residential/structures/utils/structure-instance";
@@ -70,7 +68,8 @@ const PlotService = Knit.CreateService({
 		);
 
 		// create a new UUID
-		const uuid = HttpService.GenerateGUID(false);
+		const dataService = Knit.GetService("DataService");
+		const uuid = dataService.generateUUID();
 		playersPlot.addStructure(new StructureInstance(uuid, structure), cframe);
 	},
 });

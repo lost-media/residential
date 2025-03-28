@@ -12,7 +12,7 @@ const serverUnitTestsFolder = serverTestsFolder?.FindFirstChild("unit");
 const SERVICES_FOLDER = script.FindFirstChild("services");
 
 if (SERVICES_FOLDER !== undefined) {
-	KnitServer.AddServices(SERVICES_FOLDER);
+	KnitServer.AddServicesDeep(SERVICES_FOLDER);
 }
 
 KnitServer.Start()

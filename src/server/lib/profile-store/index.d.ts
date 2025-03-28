@@ -1,12 +1,14 @@
-import type { ProfileStore, JSONAcceptable, ConstantName } from "./types";
+import type { ProfileStore, JSONAcceptable, ConstantName, Profile } from "./types";
 
 interface ProfileStoreInternal<T> extends ProfileStore<T> {
 	Mock: ProfileStore<T>;
 }
 
+type ProfileStoreName = keyof ProfileStores;
+
 interface ProfileStoreConstructor {
-	new <T = unknown>(storeName: string): ProfileStoreInternal<T>;
-	new <T>(storeName: string, template?: T & JSONAcceptable): ProfileStoreInternal<T>;
+	new <T = unknown>(storeName: ProfileStoreName): ProfileStoreInternal<T>;
+	new <T>(storeName: ProfileStoreName, template?: T): ProfileStoreInternal<T>;
 
 	IsClosing: boolean;
 	IsCriticalState: boolean;

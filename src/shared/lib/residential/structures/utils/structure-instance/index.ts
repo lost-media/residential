@@ -1,4 +1,4 @@
-import type { IStructure, IStructureInstance } from "shared/lib/residential/types";
+import type { IStructure, IStructureInstance, SerializedStructureInstance } from "shared/lib/residential/types";
 import { cframeComponentsToArray } from "shared/util/cframe-utils";
 
 class StructureInstance implements IStructureInstance {
@@ -31,16 +31,14 @@ class StructureInstance implements IStructureInstance {
 		return res;
 	}
 
-	public serialize(relativePlatformCFrame?: CFrame): object {
+	public serialize(relativePlatformCFrame?: CFrame): SerializedStructureInstance {
 		const relativeCFrame =
-			relativePlatformCFrame?.Inverse().mul(this.model?.GetPivot() ?? new CFrame()) ?? new CFrame();
-
-		const components = cframeComponentsToArray(relativeCFrame);
+			relativePlatformCFrame?.Inverse().mul(this.model?.GetPivot() ?? new CFrame());
 
 		return {
 			uuid: this.uuid,
 			structure_id: this.structure.id,
-			cframe: components,
+			cframe: relativeCFrame !== undefined ? cframeComponentsToArray(relativeCFrame) : undefined,
 
 			// any properties (i.e physical, metadata, etc) specific to this structure can go here
 		};

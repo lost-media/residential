@@ -31,6 +31,12 @@ export interface IStructureCategory {
 	getSearchResults(query: string): IStructure[];
 }
 
+export type SerializedStructureInstance = {
+    uuid: string;
+    structure_id: string;
+    cframe?: Array<number>;
+};
+
 export interface IStructureInstance {
 	// a unique identifier
 	uuid: string;
@@ -41,5 +47,5 @@ export interface IStructureInstance {
 	spawn(parent?: Instance): Model;
 
 	destroy(): void;
-	serialize(relativePlatformCFrame?: CFrame): object;
+	serialize(relativePlatformCFrame?: CFrame): SerializedStructureInstance;
 }

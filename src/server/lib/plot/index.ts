@@ -2,8 +2,12 @@ import { Assert } from "@rbxts/lunit";
 import { LinkedList } from "shared/lib/data-structures/linked-list";
 import { PLATFORM_INSTANCE_NAME, PLOT_STRUCTURES_FOLDER_NAME } from "shared/lib/plot/configs";
 import { hitboxIsCollidedInPlot } from "shared/lib/plot/utils/plot-collisions";
-import { IStructureInstance } from "shared/lib/residential/types";
+import { IStructureInstance, SerializedStructureInstance } from "shared/lib/residential/types";
 import { getAllCharacters } from "shared/util/character-utils";
+
+export type SerializedPlot = {
+	structures: SerializedStructureInstance[];
+};
 
 /**
  * Represents a plot of land in the game. Manages player assignments, structures, and plot state.
@@ -121,11 +125,12 @@ export default class Plot {
 	 * Serializes the plot's data, including all structures, into an object.
 	 * @returns An object containing serialized data for the plot.
 	 */
-	public serialize(): object {
+	public serialize(): SerializedPlot {
 		const platform = this.instance.FindFirstChild(PLATFORM_INSTANCE_NAME) as BasePart | undefined;
+		const platformCFrame = platform?.CFrame;
 
 		return {
-			structures: this.structureList.map((_, structure) => structure.serialize(platform?.CFrame)),
+			structures: this.structureList.map((_, structure) => structure.serialize(platformCFrame)),
 		};
 	}
 }

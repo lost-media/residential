@@ -1,33 +1,19 @@
-import { KnitClient, Signal } from "@rbxts/knit";
-import LoggerFactory from "shared/util/logger/factory";
+import { Controller, OnStart } from "@flamework/core";
+import Signal from "@rbxts/signal";
+import { clientEvents } from "client/utils/networking";
 
-const PlotController = KnitClient.CreateController({
-	Name: "PlotController",
+@Controller()
+export class PlotController implements OnStart {
+    private plot?: PlotInstance = undefined;
+    public signals = {
+        plotAssigned: new Signal<(plot: PlotInstance) => void>(),
+    };
 
-	// Signals
-	signals: {
-		plotAssigned: new Signal<(plot: PlotInstance) => void>(),
-	},
+    public onStart() {
+        this.listenForPlotAssignedCallback();
+    }
 
-	plot: undefined as Optional<PlotInstance>,
-
-	KnitStart() {
-		this.listenForPlotAssignCallback();
-	},
-
-	listenForPlotAssignCallback(): void {
-		const plotService = KnitClient.GetService("PlotService");
-
-		const plotAssignedCallback = (plot: PlotInstance) => {
-			this.plot = plot;
-			plotAssignedConnection.Disconnect();
-			this.signals.plotAssigned.Fire(plot);
-		};
-
-		const plotAssignedConnection = plotService.plotAssigned.Connect(plotAssignedCallback);
-	},
-
-	async getPlotAsync(): Promise<PlotInstance> {
+    public async getPlotAsync(): Promise<PlotInstance> {
 		return new Promise((resolve) => {
 			if (this.plot !== undefined) {
 				resolve(this.plot);
@@ -36,15 +22,20 @@ const PlotController = KnitClient.CreateController({
 				resolve(res);
 			}
 		});
-	},
+	}
 
-	async placeStructure(structureId: string, cframe: CFrame): Promise<void> {
-		const plotService = KnitClient.GetService("PlotService");
+    public async placeStructure(structureId: string, cframe: CFrame): Promise<void> {
+        clientEvents.placeStructure.fire(structureId, cframe);
+	}
 
-		plotService.placeStructurePromise(structureId, cframe).catch((e) => {
-			LoggerFactory.getLogger().log(`[PlotController:placeStructure]: Error from server: ${e}`);
-		});
-	},
-});
+    private listenForPlotAssignedCallback(): void {
 
-export = PlotController;
+		const plotAssignedCallback = (plot: PlotInstance) => {
+			this.plot = plot;
+			plotAssignedConnection.Disconnect();
+			this.signals.plotAssigned.Fire(plot);
+		};
+
+		const plotAssignedConnection = clientEvents.plotAssigned.connect(plotAssignedCallback);
+    }
+}

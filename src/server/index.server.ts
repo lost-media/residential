@@ -3,6 +3,7 @@ import LoggerFactory, { LogLevel } from "shared/util/logger/factory";
 import { TestRunner } from "@rbxts/lunit";
 import { StructureCategories } from "shared/lib/residential/structures";
 import { initializeStructure } from "shared/lib/residential/structures/utils/initialize-structure-models";
+import { Flamework } from "@flamework/core";
 
 const TESTS_ENABLED = true;
 
@@ -14,6 +15,12 @@ const SERVICES_FOLDER = script.FindFirstChild("services");
 if (SERVICES_FOLDER !== undefined) {
 	KnitServer.AddServicesDeep(SERVICES_FOLDER);
 }
+
+// Add all paths to Flamework here
+Flamework.addPaths("src/server/services");
+Flamework.addPaths("src/shared/networking");
+
+Flamework.ignite();
 
 KnitServer.Start()
 	.andThen(async () => {

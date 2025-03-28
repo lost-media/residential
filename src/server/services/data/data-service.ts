@@ -1,9 +1,7 @@
 import { KnitServer as Knit } from "@rbxts/knit";
 import { HttpService, Players } from "@rbxts/services";
-import ProfileStore from "server/lib/profile-store";
 import type { ProfileStore as ProfileStoreType, Profile } from "server/lib/profile-store/types";
 import LoggerFactory from "shared/util/logger/factory";
-import type { PlotProfileStore } from "./types";
 
 const DataService = Knit.CreateService({
 	Name: "DataService",

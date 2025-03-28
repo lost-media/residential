@@ -12,7 +12,6 @@ const PlotDataService = Knit.CreateService({
 
 	KnitStart() {
 		const dataService = Knit.GetService("DataService");
-
 		dataService.addStore(this.plotProfileStore);
 	},
 

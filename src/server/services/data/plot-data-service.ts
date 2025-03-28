@@ -1,37 +1,41 @@
 import ProfileStore from "server/lib/profile-store";
-import { PLAYER_PLOTS_PROFILE_STORE_KEY, PLOT_PROFILE_STORE_KEY } from "server/utils/constants";
+import { PLOT_PROFILE_STORE_KEY } from "server/utils/constants";
 import { OnStart, Service } from "@flamework/core";
 import { DataService } from "./data-service";
 import { SerializedPlotInstance } from "server/lib/plot";
-import type { Profile } from "server/lib/profile-store/types";
+import { PlotService } from "../plot-service";
+import { AbstractDataService } from "./abstract-data-service";
+import { ProfileKey } from "./types";
 
 export type SerializedPlot = {
 	uuid: string;
 	ownerId: number;
+	currencies: {
+		koins: number;
+	};
 	plot: SerializedPlotInstance;
 };
 
-export type PlayerPlotProfileStoreSchema = string[];
 export type PlotProfileSchema = Map<string, SerializedPlot>;
 
+const defaultPlotProfile: PlotProfileSchema = new Map<string, SerializedPlot>();
+
 @Service()
-export class PlotDataService implements OnStart {
-	private playerPlotsProfileStore = new ProfileStore<PlayerPlotProfileStoreSchema>(PLAYER_PLOTS_PROFILE_STORE_KEY);
-	private plotProfileStore = new ProfileStore<PlotProfileSchema>(PLOT_PROFILE_STORE_KEY, new Map());
+export class PlotDataService extends AbstractDataService<PlotProfileSchema> implements OnStart {
+	protected profileIdentifier: ProfileKey = "PLOT_PROFILE";
+	protected profileStore = new ProfileStore<PlotProfileSchema>(this.profileIdentifier, defaultPlotProfile);
 
-	constructor(private dataService: DataService) {}
-
-	public onStart(): void {
-		this.dataService.addStore(this.playerPlotsProfileStore, {
-			attachesToPlayer: true,
-		})
-		this.dataService.addStore(this.plotProfileStore, {
-			attachesToPlayer: false,
-			profileKeyGenerator: () => this.dataService.generateUUID()
-		});
+	constructor(
+		private dataService: DataService,
+		private plotService: PlotService,
+	) {
+		super();
 	}
 
-	public getProfile(uuid: string): Optional<Profile<PlotProfileSchema>> {
-		return this.dataService.getProfile(PLOT_PROFILE_STORE_KEY, uuid);
+	public onStart(): void {
+		this.dataService.addStore(this.profileStore, {
+			attachesToPlayer: false,
+			profileKeyGenerator: () => this.dataService.generateUUID(),
+		});
 	}
 }

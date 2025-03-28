@@ -38,15 +38,14 @@ export interface VersionQuery<T> {
 	NextAsync(): Profile<T> | undefined;
 }
 
+export type StartSessionParams = {
+	Steal: boolean;
+	Cancel: () => boolean;
+};
+
 export interface ProfileStore<T> {
 	Name: string;
-	StartSessionAsync(
-		profileKey: string,
-		params: Partial<{
-			Steal: boolean;
-			Cancel: () => boolean;
-		}>,
-	): Profile<T> | undefined;
+	StartSessionAsync(profileKey: string, params: Partial<StartSessionParams>): Profile<T> | undefined;
 	MessageAsync(profileKey: string, message: JSONAcceptable): boolean;
 	GetAsync(profileKey: string, version?: string): Profile<T> | undefined;
 	RemoveAsync(profileKey: string): boolean;

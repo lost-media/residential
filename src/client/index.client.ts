@@ -7,7 +7,6 @@ Flamework.addPaths("src/client/controllers");
 try {
 	Flamework.ignite();
 	LoggerFactory.getLogger().log("Client started", LogLevel.Info);
-}
-catch {
+} catch {
 	LoggerFactory.getLogger().log("Client failed to start", LogLevel.Error);
 }

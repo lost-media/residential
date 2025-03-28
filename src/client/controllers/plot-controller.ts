@@ -4,16 +4,16 @@ import { clientEvents } from "client/utils/networking";
 
 @Controller()
 export class PlotController implements OnStart {
-    private plot?: PlotInstance = undefined;
-    public signals = {
-        plotAssigned: new Signal<(plot: PlotInstance) => void>(),
-    };
+	private plot?: PlotInstance = undefined;
+	public signals = {
+		plotAssigned: new Signal<(plot: PlotInstance) => void>(),
+	};
 
-    public onStart() {
-        this.listenForPlotAssignedCallback();
-    }
+	public onStart() {
+		this.listenForPlotAssignedCallback();
+	}
 
-    public async getPlotAsync(): Promise<PlotInstance> {
+	public async getPlotAsync(): Promise<PlotInstance> {
 		return new Promise((resolve) => {
 			if (this.plot !== undefined) {
 				resolve(this.plot);
@@ -24,12 +24,11 @@ export class PlotController implements OnStart {
 		});
 	}
 
-    public async placeStructure(structureId: string, cframe: CFrame): Promise<void> {
-        clientEvents.placeStructure.fire(structureId, cframe);
+	public async placeStructure(structureId: string, cframe: CFrame): Promise<void> {
+		clientEvents.placeStructure.fire(structureId, cframe);
 	}
 
-    private listenForPlotAssignedCallback(): void {
-
+	private listenForPlotAssignedCallback(): void {
 		const plotAssignedCallback = (plot: PlotInstance) => {
 			this.plot = plot;
 			plotAssignedConnection.Disconnect();
@@ -37,5 +36,5 @@ export class PlotController implements OnStart {
 		};
 
 		const plotAssignedConnection = clientEvents.plotAssigned.connect(plotAssignedCallback);
-    }
+	}
 }

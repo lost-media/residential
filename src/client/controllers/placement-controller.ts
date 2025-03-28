@@ -8,15 +8,15 @@ import { IStructure } from "shared/lib/residential/types";
 
 @Controller()
 export class PlacementController implements OnStart {
-    private placementClient?: PlacementClient;
+	private placementClient?: PlacementClient;
 	private currentStructure?: IStructure;
-    public signals = {
-        plotAssigned: new Signal<(plot: PlotInstance) => void>(),
-    };
+	public signals = {
+		plotAssigned: new Signal<(plot: PlotInstance) => void>(),
+	};
 
 	constructor(private plotController: PlotController) {}
 
-    public async onStart() {
+	public async onStart() {
 		const plot = await this.plotController.getPlotAsync();
 
 		this.placementClient = new PlacementClient(plot);
@@ -30,7 +30,7 @@ export class PlacementController implements OnStart {
 				}
 			});
 		}
-    }
+	}
 
 	public async placeModel(): Promise<void> {
 		if (this.placementClient !== undefined) {
@@ -40,7 +40,7 @@ export class PlacementController implements OnStart {
 				const onCancelledConnection = this.placementClient.signals.onCancelled.Connect(() => {
 					onCancelledConnection.Disconnect();
 				});
-	
+
 				const onPlacementConfirmedConnection = this.placementClient.signals.onPlacementConfirmed.Connect(
 					(cframe) => {
 						if (this.placementClient !== undefined) {
@@ -48,8 +48,7 @@ export class PlacementController implements OnStart {
 								onPlacementConfirmedConnection.Disconnect();
 							}
 						}
-						
-	
+
 						if (this.currentStructure !== undefined) {
 							this.plotController.placeStructure(this.currentStructure.id, cframe);
 						}

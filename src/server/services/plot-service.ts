@@ -9,17 +9,22 @@ import Plot from "server/lib/plot";
 import { getStructureById } from "shared/lib/residential/structures/utils/get-structures";
 import StructureInstance from "shared/lib/residential/structures/utils/structure-instance";
 import { DataService } from "./data/data-service";
+import { IStructureInstance } from "shared/lib/residential/types";
 
 @Service()
 export class PlotService implements OnInit, OnStart {
-    public signals = {
-        onPlotAssigned: new Signal<(player: Player, plot: Plot) => void>(),
-    };
+	public signals = {
+		onStructurePlaced: new Signal<(plot: Plot, structure: IStructureInstance) => void>(),
+		onPlotAssigned: new Signal<(player: Player, plot: Plot) => void>(),
+	};
 
-    constructor(private playerService: PlayerService, private dataService: DataService) {}
+	constructor(
+		private playerService: PlayerService,
+		private dataService: DataService,
+	) {}
 
-    public onInit(): void | Promise<void> {
-        const plotsFolder = Workspace.FindFirstChild("Plots");
+	public onInit(): void | Promise<void> {
+		const plotsFolder = Workspace.FindFirstChild("Plots");
 
 		if (plotsFolder !== undefined) {
 			try {
@@ -30,13 +35,13 @@ export class PlotService implements OnInit, OnStart {
 		}
 
 		LoggerFactory.getLogger().log(`Loaded ${PlotFactory.count()} plot instances`, LogLevel.Info);
-    }
+	}
 
-    public onStart(): void {
+	public onStart(): void {
 		this.playerService.addPlayerJoinConnection((player: Player) => {
 			try {
 				const plot = PlotFactory.assignPlayer(player);
-				
+
 				if (plot !== undefined) {
 					this.signals.onPlotAssigned.Fire(player, plot);
 
@@ -61,8 +66,8 @@ export class PlotService implements OnInit, OnStart {
 
 		serverEvents.placeStructure.connect((player, structureId, cframe, uuid) => {
 			this.placeStructure(player, structureId, cframe, uuid);
-		})
-    }
+		});
+	}
 
 	public placeStructure(player: Player, structureId: string, cframe: CFrame, structureUUID?: string): void {
 		const playersPlot = PlotFactory.getPlayersPlot(player);
@@ -76,6 +81,11 @@ export class PlotService implements OnInit, OnStart {
 
 		// create a new UUID if one doesn't exist
 		const uuid = structureUUID ?? this.dataService.generateUUID();
-		playersPlot.addStructure(new StructureInstance(uuid, structure), cframe);
+
+		try {
+			const newStructure = new StructureInstance(uuid, structure);
+			playersPlot.addStructure(newStructure, cframe);
+			this.signals.onStructurePlaced.Fire(playersPlot, newStructure);
+		} catch {}
 	}
 }

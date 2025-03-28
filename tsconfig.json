@@ -29,9 +29,7 @@
 			"shared/*": ["./shared/*"]
 		},
 
-		"plugins": [
-			{ "transform": "rbxts-transformer-flamework" }
-		]
+		"plugins": [{ "transform": "rbxts-transformer-flamework" }]
 	},
 
 	"exclude": ["tools"]

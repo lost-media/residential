@@ -19,8 +19,6 @@ export class PlacementController implements OnStart {
     public async onStart() {
 		const plot = await this.plotController.getPlotAsync();
 
-		print(plot)
-
 		this.placementClient = new PlacementClient(plot);
 		this.placeModel();
 

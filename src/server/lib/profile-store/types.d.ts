@@ -39,7 +39,7 @@ export interface VersionQuery<T> {
 }
 
 export interface ProfileStore<T> {
-	Name: ProfileKey;
+	Name: string;
 	StartSessionAsync(
 		profileKey: string,
 		params: Partial<{

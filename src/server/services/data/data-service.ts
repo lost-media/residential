@@ -1,6 +1,6 @@
 import { OnStart, Service } from "@flamework/core";
 import { HttpService, Players } from "@rbxts/services";
-import type { ProfileStore as ProfileStoreType, Profile } from "server/lib/profile-store/types";
+import type { ProfileStore as ProfileStoreType, Profile, ProfileStore } from "server/lib/profile-store/types";
 import LoggerFactory from "shared/util/logger/factory";
 import { PlayerService } from "../player-service";
 import type { ProfileKey, ProfileSchemaForKey, ProfileSchemas } from "./types";
@@ -38,11 +38,18 @@ export class DataService implements OnStart {
         store: ProfileStoreType<ProfileSchemas[K]>,
         options: Partial<AddStoreOptions>,
     ): void {
-        assert(!this.dataStoreMap.has(store.Name), `Store with name "${store.Name}" already exists.`);
-        this.dataStoreMap.set(store.Name, store);
+        assert(!this.dataStoreMap.has(store.Name as ProfileKey), `Store with name "${store.Name}" already exists.`);
+        this.dataStoreMap.set(store.Name as ProfileKey, store);
 
         if (options.attachesToPlayer) {
-            this.attachStoreToPlayers(store, options.profileKeyGenerator ?? this.getDefaultProfileKey);
+            this.attachStoreToPlayers(store, (player) => {
+                if (options.profileKeyGenerator !== undefined) {
+                    return options.profileKeyGenerator(player);
+                }
+                else {
+                    return this.getDefaultProfileKey(player);
+                }
+        });
         }
     }
 
@@ -77,7 +84,7 @@ export class DataService implements OnStart {
             });
 
             if (newProfile) {
-                this.setupPlayerProfile(player, store.Name, newProfile);
+                this.setupPlayerProfile(player, store.Name as ProfileKey, newProfile);
             }
         });
     }
@@ -115,16 +122,16 @@ export class DataService implements OnStart {
     public getProfile<K extends ProfileKey>(
         storeKey: K,
         profileKey: string,
-    ): Profile<ProfileSchemas[K]> | undefined {
-        const store = this.dataStoreMap.get(storeKey);
+    ): Profile<ProfileSchemaForKey<K>> | undefined {
+        const store = this.dataStoreMap.get(storeKey) as ProfileStoreType<ProfileSchemaForKey<K>>;
         return store?.GetAsync(profileKey);
     }
 
     /**
      * Retrieves a profile store by its key.
      */
-    public getStore<K extends ProfileKey>(key: K): ProfileStoreType<ProfileSchemas[K]> | undefined {
-        return this.dataStoreMap.get(key);
+    public getStore<K extends ProfileKey>(key: K): Optional<ProfileStoreType<ProfileSchemaForKey<K>>> {
+        return this.dataStoreMap.get(key) as Optional<ProfileStoreType<ProfileSchemaForKey<K>>>;
     }
 
     /**

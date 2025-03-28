@@ -2,10 +2,12 @@ import ProfileStore from "server/lib/profile-store";
 import { OnStart, Service } from "@flamework/core";
 import { DataService } from "./data-service";
 import { SerializedPlotInstance } from "server/lib/plot";
-import { PlotService } from "../plot-service";
-import { AbstractDataService } from "./abstract-data-service";
-import { ProfileKey, ProfileSchemas } from "./types";
 import { Profile } from "server/lib/profile-store/types";
+import { PLAYER_PROFILE_STORE_KEY } from "server/utils/constants";
+import { Players } from "@rbxts/services";
+import { PlayerService } from "../player-service";
+import { getKeysFromMap } from "shared/util/array-utils";
+import Signal from "@rbxts/signal";
 
 export type SerializedPlot = {
 	uuid: string;
@@ -13,56 +15,123 @@ export type SerializedPlot = {
 	plot: SerializedPlotInstance;
 };
 
+export type PlotMetadata = {
+	plotName: string;
+	lastLogin: number; // timestamp of when it was last logged in
+};
+
 // Defines player-wide settings that don't depend on any plots.
 // i.e settings, list of universal items that the user owns
 export type PlayerProfileSchema = {
 	roadbucks: number;
-	plots: string[];
+	plots: Map<string, PlotMetadata>;
 	settings: {};
 };
 
 const defaultPlayerProfile: PlayerProfileSchema = {
 	roadbucks: 0,
-	plots: [],
+	plots: new Map(),
 	settings: {},
 };
 
 @Service()
-export class PlayerDataService extends AbstractDataService<PlayerProfileSchema> implements OnStart {
-	private playerData: Map<Player, Profile<PlayerProfileSchema>> = new Map();
+export class PlayerDataService implements OnStart {
+	public signals = {
+		userProfileLoaded: new Signal<(player: Player, profile: Profile<PlayerProfileSchema>) => void>(),
+	};
 
-	protected profileIdentifier: ProfileKey = "PLAYER_PROFILE";
-	protected profileStore = new ProfileStore<PlayerProfileSchema>(this.profileIdentifier, defaultPlayerProfile);
+	private playerProfiles = new Map<Player, Profile<PlayerProfileSchema>>();
+	protected profileStore = new ProfileStore<PlayerProfileSchema>(PLAYER_PROFILE_STORE_KEY, defaultPlayerProfile);
 
 	constructor(
 		private dataService: DataService,
-		private plotService: PlotService,
-	) {
-		super();
-	}
+		private playerService: PlayerService,
+	) {}
 
 	public onStart(): void {
-		this.dataService.addStore(this.profileStore, {
-			attachesToPlayer: true,
-			profileKeyGenerator: (player) => this.generateProfileKey(player),
-		});
+		this.playerService.addPlayerJoinConnection((player) => {
+			const profile = this.createProfile(player);
 
-		this.plotService.signals.onStructurePlaced.Connect((plot, structure) => {
-			const player = plot.getPlayer();
-			if (player === undefined) return;
+			if (profile !== undefined) {
+				this.signals.userProfileLoaded.Fire(player, profile);
+			}
 		});
 	}
 
-	public addPlotToUser(player: Player, uuid: string) {
-		const profileKey = this.generateProfileKey(player);
-		const profile = this.getProfile(profileKey);
+	public async onUserProfileLoadedAsync(player: Player): Promise<Optional<Profile<PlayerProfileSchema>>> {
+		return new Promise((resolve) => {
+			const profile = this.getProfile(player.UserId);
+			if (profile !== undefined) {
+				resolve(profile);
+			} else {
+				const callback = (_: Player, profile: Profile<PlayerProfileSchema>) => {
+					connection.Disconnect();
+					resolve(profile);
+				};
+
+				const connection = this.signals.userProfileLoaded.Connect(callback);
+			}
+		});
+	}
+
+	public createProfile(player: Player): Optional<Profile<PlayerProfileSchema>> {
+		const profileKey = this.getProfileKey(player);
+		const profile = this.profileStore.StartSessionAsync(profileKey, {
+			Cancel: () => player.IsDescendantOf(Players) === false,
+		});
 
 		if (profile !== undefined) {
-			profile.Data.plots.push(uuid);
+			this.playerProfiles.set(player, profile);
+			this.dataService.attachProfileToPlayer(player, profile);
+
+			profile.OnSessionEnd.Connect(() => {
+				this.playerProfiles.delete(player);
+			});
+
+			return profile;
+		}
+
+		return undefined;
+	}
+
+	public getProfile(userId: number) {
+		const player = Players.GetPlayerByUserId(userId);
+
+		if (player !== undefined) {
+			return this.playerProfiles.get(player);
 		}
 	}
 
-	private generateProfileKey(player: Player): string {
+	public getUserPlots(player: Player) {
+		const profile = this.getProfile(player.UserId);
+
+		if (profile !== undefined) {
+			return profile.Data.plots;
+		} else {
+			return [];
+		}
+	}
+
+	public addPlotToUser(player: Player, uuid: string, metadata: PlotMetadata) {
+		const profile = this.getProfile(player.UserId);
+
+		if (profile !== undefined) {
+			// Do not include duplicate UUIDs
+			if (profile.Data.plots.has(uuid) === false) {
+				profile.Data.plots.set(uuid, metadata);
+			}
+		}
+	}
+
+	public erasePlot(ownerId: number, uuid: string) {
+		const profile = this.getProfile(ownerId);
+
+		if (profile !== undefined) {
+			profile.Data.plots.delete(uuid);
+		}
+	}
+
+	private getProfileKey(player: Player): string {
 		return `${player.UserId}`;
 	}
 }

@@ -5,11 +5,12 @@ import LoggerFactory, { LogLevel } from "shared/util/logger/factory";
 import { PlayerService } from "./player-service";
 import { serverEvents } from "server/utils/networking";
 import Signal from "@rbxts/signal";
-import Plot from "server/lib/plot";
+import Plot, { SerializedPlotInstance } from "server/lib/plot";
 import { getStructureById } from "shared/lib/residential/structures/utils/get-structures";
 import StructureInstance from "shared/lib/residential/structures/utils/structure-instance";
 import { DataService } from "./data/data-service";
 import { IStructureInstance } from "shared/lib/residential/types";
+import { componentsArrayToCFrame } from "shared/util/cframe-utils";
 
 @Service()
 export class PlotService implements OnInit, OnStart {
@@ -87,5 +88,19 @@ export class PlotService implements OnInit, OnStart {
 			playersPlot.addStructure(newStructure, cframe);
 			this.signals.onStructurePlaced.Fire(playersPlot, newStructure);
 		} catch {}
+	}
+
+	public loadSerializedPlot(player: Player, serializedPlot: SerializedPlotInstance) {
+		const playersPlot = PlotFactory.getPlayersPlot(player);
+		assert(playersPlot !== undefined, `[PlotService:placeStructure]: Player "${player.Name}" doesn't have a plot`);
+
+		serializedPlot.structures.forEach((structure) => {
+			const newStructure = getStructureById(structure.structureId);
+			if (newStructure !== undefined && structure.cframe !== undefined) {
+				const newStructureInstance = new StructureInstance(structure.uuid, newStructure);
+				const cframe = componentsArrayToCFrame(structure.cframe);
+				playersPlot.addStructure(newStructureInstance, cframe);
+			}
+		});
 	}
 }

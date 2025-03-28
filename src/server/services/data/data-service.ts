@@ -1,24 +1,13 @@
 import { OnStart, Service } from "@flamework/core";
 import { HttpService, Players } from "@rbxts/services";
-import type { ProfileStore as ProfileStoreType, Profile, ProfileStore } from "server/lib/profile-store/types";
+import type { ProfileStore as ProfileStoreType, Profile } from "server/lib/profile-store/types";
 import LoggerFactory from "shared/util/logger/factory";
 import { PlayerService } from "../player-service";
 import type { ProfileKey, ProfileSchemaForKey, ProfileSchemas } from "./types";
 
-type AddStoreOptions =
-	| {
-			attachesToPlayer: true;
-			profileKeyGenerator: (player: Player) => string;
-	  }
-	| {
-			attachesToPlayer: false;
-			profileKeyGenerator: () => string;
-	  };
-
 @Service()
 export class DataService implements OnStart {
-	private dataStoreMap = new Map<string, ProfileStoreType<ProfileSchemas[ProfileKey]>>();
-	private playerSessions = new Map<Player, Map<string, Profile<ProfileSchemaForKey<ProfileKey>>>>();
+	private playerSessions = new Map<Player, Array<Profile<unknown>>>();
 
 	constructor(private playerService: PlayerService) {}
 
@@ -29,27 +18,6 @@ export class DataService implements OnStart {
 		this.playerService.addPlayerLeavingConnection((player) => {
 			this.endPlayerSessions(player);
 		});
-	}
-
-	/**
-	 * Adds a new profile store to the service.
-	 */
-	public addStore<K extends ProfileKey>(
-		store: ProfileStoreType<ProfileSchemas[K]>,
-		options: Partial<AddStoreOptions>,
-	): void {
-		assert(!this.dataStoreMap.has(store.Name as ProfileKey), `Store with name "${store.Name}" already exists.`);
-		this.dataStoreMap.set(store.Name as ProfileKey, store);
-
-		if (options.attachesToPlayer) {
-			this.attachStoreToPlayers(store, (player) => {
-				if (options.profileKeyGenerator !== undefined) {
-					return options.profileKeyGenerator(player);
-				} else {
-					return this.getDefaultProfileKey(player);
-				}
-			});
-		}
 	}
 
 	/**
@@ -65,6 +33,7 @@ export class DataService implements OnStart {
 		});
 
 		this.playerSessions.delete(player);
+
 		LoggerFactory.getLogger().log(
 			`Ended ${count} profile(s) for Player ${player.Name}'s session`,
 			undefined,
@@ -73,35 +42,9 @@ export class DataService implements OnStart {
 	}
 
 	/**
-	 * Attaches a profile store to players, creating sessions as they join.
-	 */
-	private attachStoreToPlayers<K extends ProfileKey>(
-		store: ProfileStoreType<ProfileSchemas[K]>,
-		profileKeyGenerator: (player: Player) => string,
-	): void {
-		this.playerService.addPlayerJoinConnection((player) => {
-			const playerProfiles = new Map<ProfileKey, Profile<ProfileSchemaForKey<ProfileKey>>>();
-			this.playerSessions.set(player, playerProfiles);
-
-			const profileKey = profileKeyGenerator(player);
-			const newProfile = store.StartSessionAsync(profileKey, {
-				Cancel: () => player.Parent !== Players,
-			});
-
-			if (newProfile) {
-				this.setupPlayerProfile(player, store.Name as ProfileKey, newProfile);
-			}
-		});
-	}
-
-	/**
 	 * Sets up a player's profile and handles session events.
 	 */
-	private setupPlayerProfile<K extends ProfileKey>(
-		player: Player,
-		storeName: K,
-		profile: Profile<ProfileSchemas[K]>,
-	): void {
+	public attachProfileToPlayer(player: Player, profile: Profile<unknown>): void {
 		profile.AddUserId(player.UserId);
 		profile.Reconcile();
 
@@ -111,33 +54,13 @@ export class DataService implements OnStart {
 		});
 
 		if (player.Parent === Players) {
-			const playerProfiles =
-				this.playerSessions.get(player) ?? new Map<ProfileKey, Profile<ProfileSchemaForKey<ProfileKey>>>();
-			playerProfiles.set(storeName, profile);
-			this.playerSessions.set(player, playerProfiles);
+			const playerProfiles = this.playerSessions.get(player) ?? [];
 
-			LoggerFactory.getLogger().log(`Player ${player.Name}'s profile loaded`, undefined, "DataService");
+			playerProfiles.push(profile);
+			this.playerSessions.set(player, playerProfiles);
 		} else {
 			profile.EndSession();
 		}
-	}
-
-	/**
-	 * Retrieves a profile for a given store and profile key.
-	 */
-	public getProfile<K extends ProfileKey>(
-		storeKey: K,
-		profileKey: string,
-	): Profile<ProfileSchemaForKey<K>> | undefined {
-		const store = this.dataStoreMap.get(storeKey); // TypeScript infers the correct type here
-		return store?.GetAsync(profileKey) as Profile<ProfileSchemaForKey<K>> | undefined;
-	}
-
-	/**
-	 * Retrieves a profile store by its key.
-	 */
-	public getStore<K extends ProfileKey>(key: K): Optional<ProfileStoreType<ProfileSchemaForKey<K>>> {
-		return this.dataStoreMap.get(key) as Optional<ProfileStoreType<ProfileSchemaForKey<K>>>;
 	}
 
 	/**
@@ -145,12 +68,5 @@ export class DataService implements OnStart {
 	 */
 	public generateUUID(): string {
 		return HttpService.GenerateGUID(false);
-	}
-
-	/**
-	 * Default profile key generator for players.
-	 */
-	private getDefaultProfileKey(player: Player): string {
-		return `${player.UserId}`;
 	}
 }

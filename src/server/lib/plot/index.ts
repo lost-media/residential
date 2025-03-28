@@ -133,4 +133,10 @@ export default class Plot {
 			structures: this.structureList.map((_, structure) => structure.serialize(platformCFrame)),
 		};
 	}
+
+	public static getEmptySerializedPlotInstance(): SerializedPlotInstance {
+		return {
+			structures: [],
+		};
+	}
 }

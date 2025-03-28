@@ -45,6 +45,14 @@ const DataService = Knit.CreateService({
 				// handle this
 			}
 		});
+
+		playerService.addPlayerLeavingConnection((player) => {
+			const profile = this.playerDataMap.get(player);
+			if (profile !== undefined) {
+				profile.EndSession();
+				LoggerFactory.getLogger().log(`Ended Player ${player.Name}'s session`, undefined, "DataService");
+			}
+		});
 	},
 
 	createNewSaveFile(player: Player): void {

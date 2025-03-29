@@ -35,6 +35,10 @@ export type SerializedStructureInstance = {
 	uuid: string;
 	structureId: string;
 	cframe?: Array<number>;
+	snappedTo?: Array<{
+		parentUuid: string;
+		attachmentName: string;
+	}>
 };
 
 export interface IStructureInstance {

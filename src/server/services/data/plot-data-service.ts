@@ -76,7 +76,6 @@ export class PlotDataService implements OnStart {
 
 				if (profile !== undefined) {
 					profile.Data.plot = plot.serialize();
-					print(profile.Data.plot.structures.size());
 				}
 			}
 		});

@@ -11,6 +11,7 @@ import StructureInstance from "shared/lib/residential/structures/utils/structure
 import { DataService } from "./data/data-service";
 import { IStructureInstance } from "shared/lib/residential/types";
 import { componentsArrayToCFrame } from "shared/util/cframe-utils";
+import { RepeatableProfiler } from "shared/util/profiler";
 
 @Service()
 export class PlotService implements OnInit, OnStart {
@@ -85,7 +86,8 @@ export class PlotService implements OnInit, OnStart {
 
 		try {
 			const newStructure = new StructureInstance(uuid, structure);
-			playersPlot.addStructure(newStructure, cframe);
+			// Keep the third argument false because it's an absolute position, not relative
+			playersPlot.addStructure(newStructure, cframe, false);
 			this.signals.onStructurePlaced.Fire(playersPlot, newStructure);
 		} catch {}
 	}
@@ -94,13 +96,19 @@ export class PlotService implements OnInit, OnStart {
 		const playersPlot = PlotFactory.getPlayersPlot(player);
 		assert(playersPlot !== undefined, `[PlotService:placeStructure]: Player "${player.Name}" doesn't have a plot`);
 
+		const profiler = new RepeatableProfiler();
+
+		profiler.tic();
 		serializedPlot.structures.forEach((structure) => {
 			const newStructure = getStructureById(structure.structureId);
 			if (newStructure !== undefined && structure.cframe !== undefined) {
 				const newStructureInstance = new StructureInstance(structure.uuid, newStructure);
 				const cframe = componentsArrayToCFrame(structure.cframe);
-				playersPlot.addStructure(newStructureInstance, cframe);
+				playersPlot.addStructure(newStructureInstance, cframe, true);
 			}
 		});
+		profiler.toc();
+
+		print(`[PlotService]: Took ${profiler.getFormattedAverage()} to load ${serializedPlot.structures.size()} structures`)
 	}
 }

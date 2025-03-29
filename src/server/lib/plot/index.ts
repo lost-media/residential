@@ -5,7 +5,7 @@ import { hitboxIsCollidedInPlot } from "shared/lib/plot/utils/plot-collisions";
 import { IStructureInstance, SerializedStructureInstance } from "shared/lib/residential/types";
 import { getAllCharacters } from "shared/util/character-utils";
 
-export type SerializedPlot = {
+export type SerializedPlotInstance = {
 	structures: SerializedStructureInstance[];
 };
 
@@ -76,20 +76,19 @@ export default class Plot {
 		}
 
 		this.clear();
-
-		Assert.empty(
-			this.instance[PLOT_STRUCTURES_FOLDER_NAME].GetChildren(),
-			() => `[Plot]: Object leak detected while unassigning player ${this.player?.Name}`,
-		);
 	}
 
 	/**
 	 * Adds a structure to the plot at the specified position.
 	 * @param structureInstance - The structure to add.
-	 * @param cFrame - The position and orientation where the structure should be placed.
+	 * @param cframe - The position and orientation where the structure should be placed.
 	 * @throws Will throw an error if the structure's model does not have a `PrimaryPart`.
 	 */
-	public addStructure(structureInstance: IStructureInstance, cFrame: CFrame): void {
+	public addStructure(
+		structureInstance: IStructureInstance,
+		cframe: CFrame,
+		positionRelativeToPlatform: boolean = false,
+	): void {
 		// First, determine if there will be any collision issues
 		// Clone a hitbox
 		const tempHitbox = structureInstance.structure.model.PrimaryPart;
@@ -110,7 +109,18 @@ export default class Plot {
 
 		newStructure.PrimaryPart.Anchored = true;
 		newStructure.PrimaryPart.CanCollide = false;
-		newStructure.PivotTo(cFrame);
+
+		if (positionRelativeToPlatform === true) {
+			const platform = this.getPlatform();
+
+			if (platform !== undefined) {
+				cframe = platform.CFrame.mul(cframe);
+			} else {
+				throw `[Plot:addStructure]: Platform is undefined`;
+			}
+		}
+
+		newStructure.PivotTo(cframe);
 
 		this.structureList.add(structureInstance.uuid, structureInstance);
 	}
@@ -119,18 +129,33 @@ export default class Plot {
 		this.structureList.forEach((_, value) => {
 			value.destroy();
 		});
+
+		Assert.empty(
+			this.instance[PLOT_STRUCTURES_FOLDER_NAME].GetChildren(),
+			() => `[Plot]: Object leak detected while unassigning player ${this.player?.Name}`,
+		);
 	}
 
 	/**
 	 * Serializes the plot's data, including all structures, into an object.
 	 * @returns An object containing serialized data for the plot.
 	 */
-	public serialize(): SerializedPlot {
+	public serialize(): SerializedPlotInstance {
 		const platform = this.instance.FindFirstChild(PLATFORM_INSTANCE_NAME) as BasePart | undefined;
 		const platformCFrame = platform?.CFrame;
 
 		return {
 			structures: this.structureList.map((_, structure) => structure.serialize(platformCFrame)),
 		};
+	}
+
+	public static getEmptySerializedPlotInstance(): SerializedPlotInstance {
+		return {
+			structures: [],
+		};
+	}
+
+	private getPlatform(): BasePart | undefined {
+		return this.instance.FindFirstChild(PLATFORM_INSTANCE_NAME) as BasePart | undefined;
 	}
 }

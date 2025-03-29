@@ -4,6 +4,7 @@ export function cframeComponentsToArray(cframe: CFrame): Array<number> {
 }
 
 export function componentsArrayToCFrame(components: Array<number>) {
+	assert(components.size() === 12);
 	return new CFrame(
 		components[0],
 		components[1],

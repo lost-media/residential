@@ -89,7 +89,9 @@ export class PlotService implements OnInit, OnStart {
 			// Keep the third argument false because it's an absolute position, not relative
 			playersPlot.addStructure(newStructure, cframe, false);
 			this.signals.onStructurePlaced.Fire(playersPlot, newStructure);
-		} catch {}
+		} catch (e) {
+			LoggerFactory.getLogger().log(`Error placing structure: ${e}`);
+		}
 	}
 
 	public loadSerializedPlot(player: Player, serializedPlot: SerializedPlotInstance) {
@@ -109,6 +111,8 @@ export class PlotService implements OnInit, OnStart {
 		});
 		profiler.toc();
 
-		print(`[PlotService]: Took ${profiler.getFormattedAverage()} to load ${serializedPlot.structures.size()} structures`)
+		print(
+			`[PlotService]: Took ${profiler.getFormattedAverage()} to load ${serializedPlot.structures.size()} structures`,
+		);
 	}
 }

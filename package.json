@@ -5,7 +5,7 @@
 	"scripts": {
 		"build": "rbxtsc",
 		"watch": "rbxtsc -w",
-		"dev": "rbxtsc -w",	
+		"dev": "rbxtsc -w",
 		"format": "prettier --write ."
 	},
 	"keywords": [],

@@ -38,7 +38,7 @@ export type SerializedStructureInstance = {
 	snappedTo?: Array<{
 		parentUuid: string;
 		attachmentName: string;
-	}>
+	}>;
 };
 
 export interface IStructureInstance {

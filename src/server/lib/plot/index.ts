@@ -84,7 +84,11 @@ export default class Plot {
 	 * @param cframe - The position and orientation where the structure should be placed.
 	 * @throws Will throw an error if the structure's model does not have a `PrimaryPart`.
 	 */
-	public addStructure(structureInstance: IStructureInstance, cframe: CFrame, positionRelativeToPlatform: boolean = false): void {
+	public addStructure(
+		structureInstance: IStructureInstance,
+		cframe: CFrame,
+		positionRelativeToPlatform: boolean = false,
+	): void {
 		// First, determine if there will be any collision issues
 		// Clone a hitbox
 		const tempHitbox = structureInstance.structure.model.PrimaryPart;
@@ -108,18 +112,15 @@ export default class Plot {
 
 		if (positionRelativeToPlatform === true) {
 			const platform = this.getPlatform();
-			
+
 			if (platform !== undefined) {
 				cframe = platform.CFrame.mul(cframe);
+			} else {
+				throw `[Plot:addStructure]: Platform is undefined`;
 			}
-			else {
-				throw `[Plot:addStructure]: Platform is undefined`
-			}
-			
 		}
-		
+
 		newStructure.PivotTo(cframe);
-		
 
 		this.structureList.add(structureInstance.uuid, structureInstance);
 	}
@@ -156,7 +157,5 @@ export default class Plot {
 
 	private getPlatform(): BasePart | undefined {
 		return this.instance.FindFirstChild(PLATFORM_INSTANCE_NAME) as BasePart | undefined;
-
-
 	}
 }

@@ -6,7 +6,6 @@ import { Profile } from "server/lib/profile-store/types";
 import { PLAYER_PROFILE_STORE_KEY } from "server/utils/constants";
 import { Players } from "@rbxts/services";
 import { PlayerService } from "../player-service";
-import { getKeysFromMap } from "shared/util/array-utils";
 import Signal from "@rbxts/signal";
 
 export type SerializedPlot = {
@@ -25,7 +24,7 @@ export type PlotMetadata = {
 export type PlayerProfileSchema = {
 	roadbucks: number;
 	plots: Map<string, PlotMetadata>;
-	settings: {};
+	settings: object;
 };
 
 const defaultPlayerProfile: PlayerProfileSchema = {

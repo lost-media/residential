@@ -13,6 +13,17 @@ const structure: IStructure = {
 		value: 100,
 		currency: Koins,
 	},
+
+	attachments: [
+		{
+			attachmentName: "sidewalk-attachment-1",
+			type: "solo",
+		},
+		{
+			attachmentName: "sidewalk-attachment-2",
+			type: "solo",
+		},
+	],
 };
 
 export = structure;

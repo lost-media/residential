@@ -34,3 +34,13 @@ export function getValuesFromMap<V extends defined>(map: Map<unknown, V>): V[] {
 
 	return res;
 }
+
+export function copyArray<T extends defined>(array: Array<T>): T[] {
+	const res = new Array<T>();
+
+	array.forEach((val) => {
+		res.push(val);
+	});
+
+	return res;
+}

@@ -3,6 +3,7 @@ import { TestRunner } from "@rbxts/lunit";
 import { StructureCategories } from "shared/lib/residential/structures";
 import { initializeStructure } from "shared/lib/residential/structures/utils/initialize-structure-models";
 import { Flamework } from "@flamework/core";
+import { Cmdr } from "@rbxts/cmdr";
 
 const TESTS_ENABLED = true;
 const serverUnitTestsFolder = script.FindFirstChild("tests");
@@ -13,6 +14,7 @@ Flamework.addPaths("src/shared/networking");
 
 try {
 	Flamework.ignite();
+	Cmdr.RegisterDefaultCommands();
 
 	LoggerFactory.getLogger().log("Server started", LogLevel.Info);
 

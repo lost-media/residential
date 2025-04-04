@@ -8,6 +8,7 @@ import { visualizeRaycast } from "shared/util/raycast-utils";
 import { PLATFORM_INSTANCE_NAME, PLOT_STRUCTURES_FOLDER_NAME } from "shared/lib/plot/configs";
 import { RepeatableProfiler } from "shared/util/profiler";
 import { hitboxIsCollidedInPlot } from "shared/lib/plot/utils/plot-collisions";
+import { copyArray } from "shared/util/array-utils";
 
 const SETTINGS = {
 	PLACEMENT_CONFIGS: {
@@ -192,6 +193,7 @@ class PlacementClientStateMachine {
 }
 
 class PlacementClient {
+	private player: Player;
 	private plot: PlotInstance;
 	private state: PlacementState;
 
@@ -205,6 +207,7 @@ class PlacementClient {
 	public signals: PlacementClientSignals;
 
 	constructor(plot: PlotInstance) {
+		this.player = Players.LocalPlayer;
 		this.plot = plot;
 		this.state = PlacementState.INACTIVE;
 
@@ -230,10 +233,10 @@ class PlacementClient {
 			`[PlacementClient:initiatePlacement]: The model to place DOES NOT have a primary part`,
 		);
 
-		const player = Players.LocalPlayer;
 		const platform = this.plot.WaitForChild(PLATFORM_INSTANCE_NAME) as BasePart | undefined;
 
-		const targetFilter = new Array<Instance>();
+		const targetFilter = this.getIgnoreList(false);
+		const mouseTargetFilter = copyArray(targetFilter);
 
 		if (platform === undefined) {
 			return;
@@ -263,12 +266,6 @@ class PlacementClient {
 		if (SETTINGS.PLACEMENT_CONFIGS.bools.transparentModel === true) {
 			setModelRelativeTransparency(model, SETTINGS.PLACEMENT_CONFIGS.floats.transparencyDelta);
 			model.PrimaryPart.Transparency = SETTINGS.PLACEMENT_CONFIGS.floats.hitboxTransparency;
-		}
-
-		if (SETTINGS.PLACEMENT_CONFIGS.bools.blackListCharacterForRaycast === true) {
-			if (player.Character !== undefined) {
-				targetFilter.push(player.Character);
-			}
 		}
 
 		// set the primary part's hitbox transparency
@@ -307,7 +304,7 @@ class PlacementClient {
 			}
 		});
 
-		this.mouse.setTargetFilter(targetFilter);
+		this.mouse.setTargetFilter(mouseTargetFilter);
 		this.mouse.setFilterType(Enum.RaycastFilterType.Exclude);
 
 		this.raycastParams.FilterDescendantsInstances = targetFilter;
@@ -343,7 +340,6 @@ class PlacementClient {
 		const isColliding = this.updateHitboxCollisions();
 
 		if (isColliding === true) {
-			print("COLLIDING, CANNOT PLACE!");
 			return;
 		}
 
@@ -518,7 +514,7 @@ class PlacementClient {
 
 		if (this.getPlatform() === Platform.MOBILE) {
 			const cameraPosition = camera.CFrame.Position;
-			ray = Workspace.Raycast(cameraPosition, camera.CFrame.LookVector.mul(RAY_RANGE), this.raycastParams);
+			ray = this.mouse.castRay(); // Workspace.Raycast(cameraPosition, camera.CFrame.LookVector.mul(RAY_RANGE), this.raycastParams);
 			nilRay = cameraPosition.add(
 				camera.CFrame.LookVector.mul(
 					SETTINGS.PLACEMENT_CONFIGS.integers.maxRaycastRange + platform.Size.X * 0.5 + platform.Size.Z * 0.5,
@@ -632,7 +628,7 @@ class PlacementClient {
 		const model = this.stateMachine.getModel();
 		const plot = this.plot;
 
-		const structuresFolder = plot.FindFirstChild(PLOT_STRUCTURES_FOLDER_NAME);
+		const structuresFolder = this.getPlotStructuresFolder();
 
 		if (hitbox === undefined) return false;
 		if (model === undefined) return false;
@@ -641,7 +637,7 @@ class PlacementClient {
 
 		this.state = PlacementState.MOVING as PlacementState;
 
-		const isColliding = hitboxIsCollidedInPlot(hitbox, plot, this.mouse.getTargetFilter());
+		const isColliding = hitboxIsCollidedInPlot(hitbox, plot, []);
 
 		if (isColliding === true && this.state !== PlacementState.COLLIDING) {
 			this.state = PlacementState.COLLIDING;
@@ -649,6 +645,25 @@ class PlacementClient {
 		}
 
 		return isColliding;
+	}
+
+	private getIgnoreList(ignoreStructures: boolean = true): Instance[] {
+		const res = new Array<Instance>();
+
+		if (ignoreStructures === false) {
+			const plotStructures = this.getPlotStructuresFolder();
+			if (plotStructures !== undefined) {
+				res.push(plotStructures);
+			}
+		}
+
+		if (SETTINGS.PLACEMENT_CONFIGS.bools.blackListCharacterForRaycast === true) {
+			if (this.player.Character !== undefined) {
+				res.push(this.player.Character);
+			}
+		}
+
+		return res;
 	}
 
 	private updateHitboxColor(): void {
@@ -697,9 +712,6 @@ class PlacementClient {
 		const rotation = this.stateMachine.getRotation();
 		const platform = this.getPlatformBasePart();
 
-		const dirZ = math.sign(platform.CFrame.LookVector.Z);
-		const dirX = math.sign(platform.CFrame.LookVector.X);
-
 		const tiltX = ((math.clamp(lastCFrame.X - currentCFrame.X, -10, 10) * math.pi) / 180) * amplitude;
 		const tiltZ = ((math.clamp(lastCFrame.Z - currentCFrame.Z, -10, 10) * math.pi) / 180) * amplitude;
 		const preCalc = ((rotation + platform.Orientation.Y) * math.pi) / 180;
@@ -713,6 +725,16 @@ class PlacementClient {
 
 	private getFinalCFrame(): CFrame {
 		return this.calculateModelCFrame(undefined);
+	}
+
+	private getPlotStructuresFolder(): Optional<Folder> {
+		const structures = this.plot.FindFirstChild(PLOT_STRUCTURES_FOLDER_NAME) as Folder;
+
+		if (structures !== undefined) {
+			return structures as Folder;
+		} else {
+			return undefined;
+		}
 	}
 }
 

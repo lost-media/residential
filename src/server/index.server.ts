@@ -25,7 +25,7 @@ try {
 	}
 
 	if (serverCmdrHooksFolder !== undefined) {
-		Cmdr.RegisterCommandsIn(serverCmdrHooksFolder);
+		Cmdr.RegisterHooksIn(serverCmdrHooksFolder);
 	}
 
 	LoggerFactory.getLogger().log("Server started", LogLevel.Info);

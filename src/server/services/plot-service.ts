@@ -1,24 +1,32 @@
-import { KnitServer as Knit, RemoteSignal } from "@rbxts/knit";
-import { Player } from "@rbxts/knit/Knit/KnitClient";
-import { HttpService, Workspace } from "@rbxts/services";
-import Plot from "server/lib/plot";
+import { Service, OnInit, OnStart } from "@flamework/core";
+import { Workspace } from "@rbxts/services";
 import PlotFactory from "server/lib/plot/factory";
+import LoggerFactory, { LogLevel } from "shared/util/logger/factory";
+import { PlayerService } from "./player-service";
+import { serverEvents } from "server/utils/networking";
+import Signal from "@rbxts/signal";
+import Plot, { SerializedPlotInstance } from "server/lib/plot";
 import { getStructureById } from "shared/lib/residential/structures/utils/get-structures";
 import StructureInstance from "shared/lib/residential/structures/utils/structure-instance";
-import LoggerFactory, { LogLevel } from "shared/util/logger/factory";
+import { DataService } from "./data/data-service";
+import { IStructureInstance } from "shared/lib/residential/types";
+import { componentsArrayToCFrame } from "shared/util/cframe-utils";
+import { RepeatableProfiler } from "shared/util/profiler";
 
-const PlotService = Knit.CreateService({
-	Name: "PlotService",
+@Service()
+export class PlotService implements OnInit, OnStart {
+	public signals = {
+		onStructurePlaced: new Signal<(plot: Plot, structure: IStructureInstance) => void>(),
+		onStructuresUpdated: new Signal<(plot: Plot) => void>(),
+		onPlotAssigned: new Signal<(player: Player, plot: Plot) => void>(),
+	};
 
-	Client: {
-		PlotAssigned: new RemoteSignal<(plot: PlotInstance) => void>(),
+	constructor(
+		private playerService: PlayerService,
+		private dataService: DataService,
+	) {}
 
-		placeStructure(player: Player, structureId: string, cframe: CFrame) {
-			this.Server.placeStructure(player, structureId, cframe);
-		},
-	},
-
-	KnitInit() {
+	public onInit(): void | Promise<void> {
 		const plotsFolder = Workspace.FindFirstChild("Plots");
 
 		if (plotsFolder !== undefined) {
@@ -30,16 +38,17 @@ const PlotService = Knit.CreateService({
 		}
 
 		LoggerFactory.getLogger().log(`Loaded ${PlotFactory.count()} plot instances`, LogLevel.Info);
-	},
+	}
 
-	KnitStart() {
-		const playerService = Knit.GetService("PlayerService");
-		playerService.addPlayerJoinConnection((player: Player) => {
+	public onStart(): void {
+		this.playerService.addPlayerJoinConnection((player: Player) => {
 			try {
 				const plot = PlotFactory.assignPlayer(player);
 
 				if (plot !== undefined) {
-					this.Client.PlotAssigned.Fire(player, plot.getInstance());
+					this.signals.onPlotAssigned.Fire(player, plot);
+
+					serverEvents.plotAssigned.fire(player, plot.getInstance());
 					LoggerFactory.getLogger().log(`Assigned Player "${player.Name}" to a plot`, LogLevel.Info);
 				}
 			} catch (e) {
@@ -49,9 +58,21 @@ const PlotService = Knit.CreateService({
 				);
 			}
 		});
-	},
 
-	placeStructure(player: Player, structureId: string, cframe: CFrame): void {
+		this.playerService.addPlayerLeavingConnection((player: Player) => {
+			const plot = PlotFactory.getPlayersPlot(player);
+
+			if (plot !== undefined) {
+				plot.unassignPlayer();
+			}
+		});
+
+		serverEvents.placeStructure.connect((player, structureId, cframe, uuid) => {
+			this.placeStructure(player, structureId, cframe, uuid);
+		});
+	}
+
+	public placeStructure(player: Player, structureId: string, cframe: CFrame, structureUUID?: string): void {
 		const playersPlot = PlotFactory.getPlayersPlot(player);
 		assert(playersPlot !== undefined, `[PlotService:placeStructure]: Player "${player.Name}" doesn't have a plot`);
 
@@ -61,14 +82,55 @@ const PlotService = Knit.CreateService({
 			`[PlotService:placeStructure]: Structure with ID "${structureId}" doesn't exist`,
 		);
 
-		// create a new UUID
-		const uuid = HttpService.GenerateGUID(false);
-		playersPlot.addStructure(new StructureInstance(uuid, structure), cframe);
-	},
+		// create a new UUID if one doesn't exist
+		const uuid = structureUUID ?? this.dataService.generateUUID();
 
-	getPlotFromPlayer(player: Player): Optional<Plot> {
-		return PlotFactory.getPlots().find((plot) => plot.getPlayer() === player);
-	},
-});
+		try {
+			const newStructure = new StructureInstance(uuid, structure);
+			// Keep the third argument false because it's an absolute position, not relative
+			playersPlot.addStructure(newStructure, cframe, false);
+			this.signals.onStructurePlaced.Fire(playersPlot, newStructure);
+			this.signals.onStructuresUpdated.Fire(playersPlot);
+		} catch (e) {
+			LoggerFactory.getLogger().log(`Error placing structure: ${e}`);
+		}
+	}
 
-export = PlotService;
+	public loadSerializedPlot(player: Player, serializedPlot: SerializedPlotInstance) {
+		const playersPlot = PlotFactory.getPlayersPlot(player);
+		assert(playersPlot !== undefined, `[PlotService:placeStructure]: Player "${player.Name}" doesn't have a plot`);
+
+		const profiler = new RepeatableProfiler();
+
+		profiler.tic();
+
+		serializedPlot.structures.forEach((structure) => {
+			try {
+				const newStructure = getStructureById(structure.structureId);
+				if (newStructure !== undefined && structure.cframe !== undefined) {
+					const newStructureInstance = new StructureInstance(structure.uuid, newStructure);
+					const cframe = componentsArrayToCFrame(structure.cframe);
+					playersPlot.addStructure(newStructureInstance, cframe, true);
+				}
+			} catch (e) {
+				print(e);
+			}
+		});
+
+		this.signals.onStructuresUpdated.Fire(playersPlot);
+
+		profiler.toc();
+
+		print(
+			`[PlotService]: Took ${profiler.getFormattedAverage()} to load ${serializedPlot.structures.size()} structures`,
+		);
+	}
+
+	public clearPlot(player: Player): void {
+		const playersPlot = PlotFactory.getPlayersPlot(player);
+		assert(playersPlot !== undefined, `[PlotService:placeStructure]: Player "${player.Name}" doesn't have a plot`);
+
+		playersPlot.clear();
+		this.signals.onStructuresUpdated.Fire(playersPlot);
+	}
+}

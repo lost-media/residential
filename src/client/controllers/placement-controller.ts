@@ -1,55 +1,76 @@
-import { KnitClient as Knit } from "@rbxts/knit";
 import PlacementClient, { GlobalPlacementSettings } from "client/lib/placement-client";
 import { chooseRandomStructure } from "shared/lib/residential/structures/utils/choose-random-structure";
 import LoggerFactory from "shared/util/logger/factory";
+import { Controller, OnStart } from "@flamework/core";
+import Signal from "@rbxts/signal";
+import { PlotController } from "./plot-controller";
+import { IStructure } from "shared/lib/residential/types";
+import KeybindManager from "client/lib/keybind-manager";
 
-const PlacementController = Knit.CreateController({
-	Name: "PlacementController",
+@Controller()
+export class PlacementController implements OnStart {
+	private keybindManager: KeybindManager;
 
-	currentStructure: chooseRandomStructure(),
-	placementClient: undefined as unknown as PlacementClient,
+	private placementClient?: PlacementClient;
+	private currentStructure?: IStructure;
+	public signals = {
+		plotAssigned: new Signal<(plot: PlotInstance) => void>(),
+	};
 
-	async KnitStart(): Promise<void> {
-		const plotController = Knit.GetController("PlotController");
-		const plot = await plotController.getPlotAsync();
+	constructor(private plotController: PlotController) {
+		this.keybindManager = new KeybindManager();
 
-		this.placementClient = new PlacementClient(plot);
+		this.plotController
+			.getPlotAsync()
+			.then((plot) => {
+				this.placementClient = new PlacementClient(plot);
 
-		this.placeModel();
+				const structure = chooseRandomStructure();
+				// Set up default keybinds
+				if (structure !== undefined) {
+					this.keybindManager.addKeybind(Enum.KeyCode.G, () => this.placeModel(structure));
+					this.keybindManager.connect();
+				}
+			})
+			.catch(() => {});
+	}
 
+	public async onStart() {
 		if (GlobalPlacementSettings.PLACEMENT_CONFIGS.bools.profileRenderStepped === true) {
 			spawn(() => {
 				for (let i = 0; i < 50; i++) {
-					print(this.placementClient.getRenderLoopAverageTime());
+					print(this.placementClient?.getRenderLoopAverageTime());
 					task.wait(5);
 				}
 			});
 		}
-	},
+	}
 
-	async placeModel(): Promise<void> {
-		try {
-			this.placementClient.initiatePlacement(chooseRandomStructure()?.model.Clone());
-			const onCancelledConnection = this.placementClient.signals.onCancelled.Connect(() => {
-				onCancelledConnection.Disconnect();
-			});
+	public async placeModel(structure: IStructure): Promise<void> {
+		if (this.placementClient !== undefined) {
+			try {
+				this.currentStructure = structure;
+				this.placementClient.initiatePlacement(structure.model.Clone());
+				const onCancelledConnection = this.placementClient.signals.onCancelled.Connect(() => {
+					onCancelledConnection.Disconnect();
+				});
 
-			const onPlacementConfirmedConnection = this.placementClient.signals.onPlacementConfirmed.Connect(
-				(cframe) => {
-					if (this.placementClient.isMoving() === false) {
-						onPlacementConfirmedConnection.Disconnect();
-					}
+				const onPlacementConfirmedConnection = this.placementClient.signals.onPlacementConfirmed.Connect(
+					(cframe) => {
+						if (this.placementClient !== undefined) {
+							if (this.placementClient.isMoving() === false) {
+								onPlacementConfirmedConnection.Disconnect();
+							}
+						}
 
-					const plotController = Knit.GetController("PlotController");
-					if (this.currentStructure !== undefined) {
-						plotController.placeStructure(this.currentStructure.id, cframe);
-					}
-				},
-			);
-		} catch (e) {
-			LoggerFactory.getLogger().log(`[PlacementController]: Error initiating placement ${e}`);
+						if (this.currentStructure !== undefined) {
+							this.plotController.placeStructure(this.currentStructure.id, cframe);
+						}
+					},
+				);
+			} catch (e) {
+				LoggerFactory.getLogger().log(`[PlacementController]: Error initiating placement ${e}`);
+			}
 		}
-	},
-});
-
-export = PlacementController;
+	}
+}

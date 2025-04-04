@@ -1,46 +1,58 @@
-import { KnitServer } from "@rbxts/knit";
 import LoggerFactory, { LogLevel } from "shared/util/logger/factory";
 import { TestRunner } from "@rbxts/lunit";
 import { StructureCategories } from "shared/lib/residential/structures";
 import { initializeStructure } from "shared/lib/residential/structures/utils/initialize-structure-models";
+import { Flamework } from "@flamework/core";
+import { Cmdr } from "@rbxts/cmdr";
 
 const TESTS_ENABLED = true;
+const serverUnitTestsFolder = script.FindFirstChild("tests");
 
-const serverTestsFolder = script.FindFirstChild("tests");
-const serverUnitTestsFolder = serverTestsFolder?.FindFirstChild("unit");
+const serverCmdrFolder = script.FindFirstChild("cmdr");
+const serverCmdrCommandsFolder = serverCmdrFolder?.FindFirstChild("commands");
+const serverCmdrHooksFolder = serverCmdrFolder?.FindFirstChild("hooks");
 
-const SERVICES_FOLDER = script.FindFirstChild("services");
+// Add all paths to Flamework here
+Flamework.addPaths("src/server/services");
 
-if (SERVICES_FOLDER !== undefined) {
-	KnitServer.AddServices(SERVICES_FOLDER);
-}
+try {
+	Flamework.ignite();
+	Cmdr.RegisterDefaultCommands();
 
-KnitServer.Start()
-	.andThen(async () => {
-		LoggerFactory.getLogger().log("Server started", LogLevel.Info);
+	if (serverCmdrCommandsFolder !== undefined) {
+		Cmdr.RegisterCommandsIn(serverCmdrCommandsFolder);
+	}
 
-		// Weld all parts in structures
-		StructureCategories.forEach((_, category) => {
-			category.structures.forEach((structure) => {
-				initializeStructure(structure);
-			});
+	if (serverCmdrHooksFolder !== undefined) {
+		Cmdr.RegisterHooksIn(serverCmdrHooksFolder);
+	}
+
+	LoggerFactory.getLogger().log("Server started", LogLevel.Info);
+
+	// Weld all parts in structures
+	StructureCategories.forEach((_, category) => {
+		category.structures.forEach((structure) => {
+			initializeStructure(structure);
 		});
+	});
 
-		LoggerFactory.getLogger().log("Welded all structures to primary parts", LogLevel.Info);
+	LoggerFactory.getLogger().log("Welded all structures to primary parts", LogLevel.Info);
 
-		if (TESTS_ENABLED) {
-			LoggerFactory.getLogger().log("Running tests...", LogLevel.Info);
-			// Run tests here
-			if (serverUnitTestsFolder !== undefined) {
-				const testRunner = new TestRunner([serverUnitTestsFolder]);
-				await testRunner.run().catch((e) => {
+	if (TESTS_ENABLED) {
+		LoggerFactory.getLogger().log("Running tests...", LogLevel.Info);
+		// Run tests here
+		if (serverUnitTestsFolder !== undefined) {
+			const testRunner = new TestRunner([serverUnitTestsFolder]);
+			testRunner
+				.run()
+				.then(() => {
+					LoggerFactory.getLogger().log("Tests complete", LogLevel.Info);
+				})
+				.catch((e) => {
 					LoggerFactory.getLogger().log(`Failed to run tests: ${e}`, LogLevel.Error);
 				});
-			}
-
-			LoggerFactory.getLogger().log("Tests complete", LogLevel.Info);
 		}
-	})
-	.catch((e) => {
-		LoggerFactory.getLogger().log(`Server failed to start ${e}`, LogLevel.Error);
-	});
+	}
+} catch (e) {
+	LoggerFactory.getLogger().log(`Server failed to start ${e}`, LogLevel.Error);
+}

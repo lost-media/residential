@@ -1,16 +1,15 @@
-import { KnitClient } from "@rbxts/knit";
+import { Flamework } from "@flamework/core";
+import { CmdrClient } from "@rbxts/cmdr";
 import LoggerFactory, { LogLevel } from "shared/util/logger/factory";
 
-const CONTROLLERS_FOLDER = script.FindFirstChild("controllers");
+// Add all paths to Flamework here
+Flamework.addPaths("src/client/controllers");
 
-if (CONTROLLERS_FOLDER !== undefined) {
-	KnitClient.AddControllers(CONTROLLERS_FOLDER);
+try {
+	Flamework.ignite();
+	CmdrClient.SetActivationKeys([Enum.KeyCode.F2]);
+
+	LoggerFactory.getLogger().log("Client started", LogLevel.Info);
+} catch {
+	LoggerFactory.getLogger().log("Client failed to start", LogLevel.Error);
 }
-
-KnitClient.Start()
-	.then(() => {
-		LoggerFactory.getLogger().log("Client started", LogLevel.Info);
-	})
-	.catch(() => {
-		LoggerFactory.getLogger().log("Client failed to start", LogLevel.Error);
-	});

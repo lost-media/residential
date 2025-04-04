@@ -1,20 +1,21 @@
-import { TweenService, UserInputService, Workspace } from "@rbxts/services";
-import { PlacementState, Platform, ModelSettings } from "./types";
-import { Signal } from "@rbxts/knit";
+import { Players, TweenService, UserInputService, Workspace } from "@rbxts/services";
+import { PlacementState, Platform, ModelSettings, Keybind } from "./types";
+import Signal from "@rbxts/signal";
 import { setModelAnchored, setModelCanCollide, setModelRelativeTransparency } from "shared/util/instance-utils";
 import { Trove } from "@rbxts/trove";
 import Mouse from "../mouse";
-import { Player } from "@rbxts/knit/Knit/KnitClient";
 import { visualizeRaycast } from "shared/util/raycast-utils";
 import { PLATFORM_INSTANCE_NAME, PLOT_STRUCTURES_FOLDER_NAME } from "shared/lib/plot/configs";
 import { RepeatableProfiler } from "shared/util/profiler";
 import { hitboxIsCollidedInPlot } from "shared/lib/plot/utils/plot-collisions";
+import { copyArray } from "shared/util/array-utils";
+import KeybindManager from "../keybind-manager";
 
 const SETTINGS = {
 	PLACEMENT_CONFIGS: {
 		// Bools
 		bools: {
-			profileRenderStepped: true,
+			profileRenderStepped: false,
 			enableAngleTilt: true,
 			enableFloors: true,
 			enableCollisions: true,
@@ -193,6 +194,7 @@ class PlacementClientStateMachine {
 }
 
 class PlacementClient {
+	private player: Player;
 	private plot: PlotInstance;
 	private state: PlacementState;
 
@@ -202,10 +204,12 @@ class PlacementClient {
 	private mouse: Mouse;
 	private raycastParams: RaycastParams;
 	private profiler: RepeatableProfiler;
+	private keybindManager: KeybindManager;
 
 	public signals: PlacementClientSignals;
 
 	constructor(plot: PlotInstance) {
+		this.player = Players.LocalPlayer;
 		this.plot = plot;
 		this.state = PlacementState.INACTIVE;
 
@@ -220,10 +224,18 @@ class PlacementClient {
 		this.profiler = new RepeatableProfiler();
 
 		this.signals = new PlacementClientSignals();
+		this.keybindManager = new KeybindManager();
+
+		// Set up default keybinds
+		this.keybindManager.addKeybind(Enum.KeyCode.Q, () => this.raiseLevel());
+		this.keybindManager.addKeybind(Enum.KeyCode.E, () => this.lowerLevel());
+		this.keybindManager.addKeybind(Enum.KeyCode.R, () => this.rotate());
+		this.keybindManager.addKeybind(Enum.KeyCode.C, () => this.cancelPlacement());
+		this.keybindManager.addKeybind(Enum.UserInputType.MouseButton1, () => this.confirmPlacement());
 	}
 
 	public initiatePlacement(model?: Model, settings: Partial<ModelSettings> = {}): void {
-		this.stateMachine.setPlacementInitialized(false);
+		if (this.state !== PlacementState.INACTIVE) return;
 
 		assert(model !== undefined, `[PlacementClient:initiatePlacement]: Expected model to be defined, got nil`);
 		assert(
@@ -231,9 +243,12 @@ class PlacementClient {
 			`[PlacementClient:initiatePlacement]: The model to place DOES NOT have a primary part`,
 		);
 
+		this.stateMachine.setPlacementInitialized(false);
+
 		const platform = this.plot.WaitForChild(PLATFORM_INSTANCE_NAME) as BasePart | undefined;
 
-		const targetFilter = new Array<Instance>();
+		const targetFilter = this.getIgnoreList(false);
+		const mouseTargetFilter = copyArray(targetFilter);
 
 		if (platform === undefined) {
 			return;
@@ -265,12 +280,6 @@ class PlacementClient {
 			model.PrimaryPart.Transparency = SETTINGS.PLACEMENT_CONFIGS.floats.hitboxTransparency;
 		}
 
-		if (SETTINGS.PLACEMENT_CONFIGS.bools.blackListCharacterForRaycast === true) {
-			if (Player.Character !== undefined) {
-				targetFilter.push(Player.Character);
-			}
-		}
-
 		// set the primary part's hitbox transparency
 
 		// set up the hitbox
@@ -291,23 +300,9 @@ class PlacementClient {
 		model.Parent = Workspace;
 
 		// bind all events here
-		this.janitor.connect(UserInputService.InputBegan, (input, processed) => {
-			if (processed === false) {
-				if (input.KeyCode === Enum.KeyCode.Q) {
-					this.raiseLevel();
-				} else if (input.KeyCode === Enum.KeyCode.E) {
-					this.lowerLevel();
-				} else if (input.KeyCode === Enum.KeyCode.R) {
-					this.rotate();
-				} else if (input.KeyCode === Enum.KeyCode.C) {
-					this.cancelPlacement();
-				} else if (input.UserInputType === Enum.UserInputType.MouseButton1) {
-					this.confirmPlacement();
-				}
-			}
-		});
+		this.janitor.add(this.keybindManager.connect());
 
-		this.mouse.setTargetFilter(targetFilter);
+		this.mouse.setTargetFilter(mouseTargetFilter);
 		this.mouse.setFilterType(Enum.RaycastFilterType.Exclude);
 
 		this.raycastParams.FilterDescendantsInstances = targetFilter;
@@ -343,7 +338,6 @@ class PlacementClient {
 		const isColliding = this.updateHitboxCollisions();
 
 		if (isColliding === true) {
-			print("COLLIDING, CANNOT PLACE!");
 			return;
 		}
 
@@ -384,6 +378,14 @@ class PlacementClient {
 		} else {
 			return Platform.PC;
 		}
+	}
+
+	public addKeybind(keybind: Keybind, action: () => void): void {
+		this.keybindManager.addKeybind(keybind, action);
+	}
+
+	public removeKeybind(keybind: Keybind): void {
+		this.keybindManager.removeKeybind(keybind);
 	}
 
 	private raiseLevel(): void {
@@ -518,7 +520,7 @@ class PlacementClient {
 
 		if (this.getPlatform() === Platform.MOBILE) {
 			const cameraPosition = camera.CFrame.Position;
-			ray = Workspace.Raycast(cameraPosition, camera.CFrame.LookVector.mul(RAY_RANGE), this.raycastParams);
+			ray = this.mouse.castRay(); // Workspace.Raycast(cameraPosition, camera.CFrame.LookVector.mul(RAY_RANGE), this.raycastParams);
 			nilRay = cameraPosition.add(
 				camera.CFrame.LookVector.mul(
 					SETTINGS.PLACEMENT_CONFIGS.integers.maxRaycastRange + platform.Size.X * 0.5 + platform.Size.Z * 0.5,
@@ -632,7 +634,7 @@ class PlacementClient {
 		const model = this.stateMachine.getModel();
 		const plot = this.plot;
 
-		const structuresFolder = plot.FindFirstChild(PLOT_STRUCTURES_FOLDER_NAME);
+		const structuresFolder = this.getPlotStructuresFolder();
 
 		if (hitbox === undefined) return false;
 		if (model === undefined) return false;
@@ -641,7 +643,7 @@ class PlacementClient {
 
 		this.state = PlacementState.MOVING as PlacementState;
 
-		const isColliding = hitboxIsCollidedInPlot(hitbox, plot, this.mouse.getTargetFilter());
+		const isColliding = hitboxIsCollidedInPlot(hitbox, plot, []);
 
 		if (isColliding === true && this.state !== PlacementState.COLLIDING) {
 			this.state = PlacementState.COLLIDING;
@@ -649,6 +651,25 @@ class PlacementClient {
 		}
 
 		return isColliding;
+	}
+
+	private getIgnoreList(ignoreStructures: boolean = true): Instance[] {
+		const res = new Array<Instance>();
+
+		if (ignoreStructures === false) {
+			const plotStructures = this.getPlotStructuresFolder();
+			if (plotStructures !== undefined) {
+				res.push(plotStructures);
+			}
+		}
+
+		if (SETTINGS.PLACEMENT_CONFIGS.bools.blackListCharacterForRaycast === true) {
+			if (this.player.Character !== undefined) {
+				res.push(this.player.Character);
+			}
+		}
+
+		return res;
 	}
 
 	private updateHitboxColor(): void {
@@ -697,9 +718,6 @@ class PlacementClient {
 		const rotation = this.stateMachine.getRotation();
 		const platform = this.getPlatformBasePart();
 
-		const dirZ = math.sign(platform.CFrame.LookVector.Z);
-		const dirX = math.sign(platform.CFrame.LookVector.X);
-
 		const tiltX = ((math.clamp(lastCFrame.X - currentCFrame.X, -10, 10) * math.pi) / 180) * amplitude;
 		const tiltZ = ((math.clamp(lastCFrame.Z - currentCFrame.Z, -10, 10) * math.pi) / 180) * amplitude;
 		const preCalc = ((rotation + platform.Orientation.Y) * math.pi) / 180;
@@ -713,6 +731,16 @@ class PlacementClient {
 
 	private getFinalCFrame(): CFrame {
 		return this.calculateModelCFrame(undefined);
+	}
+
+	private getPlotStructuresFolder(): Optional<Folder> {
+		const structures = this.plot.FindFirstChild(PLOT_STRUCTURES_FOLDER_NAME) as Folder;
+
+		if (structures !== undefined) {
+			return structures as Folder;
+		} else {
+			return undefined;
+		}
 	}
 }
 

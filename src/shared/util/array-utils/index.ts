@@ -14,3 +14,33 @@ export function getAverageOfList(list: Array<number>): number {
 	}
 	return list.reduce((accumulator, val) => accumulator + val) / list.size();
 }
+
+export function getKeysFromMap<K extends defined>(map: Map<K, unknown>): K[] {
+	const res = new Array<K>();
+
+	map.forEach((_, key) => {
+		res.push(key);
+	});
+
+	return res;
+}
+
+export function getValuesFromMap<V extends defined>(map: Map<unknown, V>): V[] {
+	const res = new Array<V>();
+
+	map.forEach((val) => {
+		res.push(val);
+	});
+
+	return res;
+}
+
+export function copyArray<T extends defined>(array: Array<T>): T[] {
+	const res = new Array<T>();
+
+	array.forEach((val) => {
+		res.push(val);
+	});
+
+	return res;
+}

@@ -235,13 +235,15 @@ class PlacementClient {
 	}
 
 	public initiatePlacement(model?: Model, settings: Partial<ModelSettings> = {}): void {
-		this.stateMachine.setPlacementInitialized(false);
+		if (this.state !== PlacementState.INACTIVE) return;
 
 		assert(model !== undefined, `[PlacementClient:initiatePlacement]: Expected model to be defined, got nil`);
 		assert(
 			model.PrimaryPart !== undefined,
 			`[PlacementClient:initiatePlacement]: The model to place DOES NOT have a primary part`,
 		);
+
+		this.stateMachine.setPlacementInitialized(false);
 
 		const platform = this.plot.WaitForChild(PLATFORM_INSTANCE_NAME) as BasePart | undefined;
 

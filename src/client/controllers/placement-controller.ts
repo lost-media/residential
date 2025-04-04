@@ -20,16 +20,19 @@ export class PlacementController implements OnStart {
 	constructor(private plotController: PlotController) {
 		this.keybindManager = new KeybindManager();
 
-		// Set up default keybinds
-		this.keybindManager.addKeybind(Enum.KeyCode.G, () => this.placeModel());
-		this.keybindManager.connect();
+		this.plotController
+			.getPlotAsync()
+			.then((plot) => {
+				this.placementClient = new PlacementClient(plot);
+
+				// Set up default keybinds
+				this.keybindManager.addKeybind(Enum.KeyCode.G, () => this.placeModel());
+				this.keybindManager.connect();
+			})
+			.catch(() => {});
 	}
 
 	public async onStart() {
-		const plot = await this.plotController.getPlotAsync();
-
-		this.placementClient = new PlacementClient(plot);
-
 		if (GlobalPlacementSettings.PLACEMENT_CONFIGS.bools.profileRenderStepped === true) {
 			spawn(() => {
 				for (let i = 0; i < 50; i++) {

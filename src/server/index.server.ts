@@ -8,13 +8,25 @@ import { Cmdr } from "@rbxts/cmdr";
 const TESTS_ENABLED = true;
 const serverUnitTestsFolder = script.FindFirstChild("tests");
 
+const serverCmdrFolder = script.FindFirstChild("cmdr");
+const serverCmdrCommandsFolder = serverCmdrFolder?.FindFirstChild("commands");
+const serverCmdrHooksFolder = serverCmdrFolder?.FindFirstChild("hooks");
+
 // Add all paths to Flamework here
 Flamework.addPaths("src/server/services");
-Flamework.addPaths("src/shared/networking");
+//Flamework.addPaths("src/shared/networking");
 
 try {
 	Flamework.ignite();
 	Cmdr.RegisterDefaultCommands();
+
+	if (serverCmdrCommandsFolder !== undefined) {
+		Cmdr.RegisterCommandsIn(serverCmdrCommandsFolder);
+	}
+
+	if (serverCmdrHooksFolder !== undefined) {
+		Cmdr.RegisterCommandsIn(serverCmdrHooksFolder);
+	}
 
 	LoggerFactory.getLogger().log("Server started", LogLevel.Info);
 

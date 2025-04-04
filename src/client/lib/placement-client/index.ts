@@ -9,6 +9,7 @@ import { PLATFORM_INSTANCE_NAME, PLOT_STRUCTURES_FOLDER_NAME } from "shared/lib/
 import { RepeatableProfiler } from "shared/util/profiler";
 import { hitboxIsCollidedInPlot } from "shared/lib/plot/utils/plot-collisions";
 import { copyArray } from "shared/util/array-utils";
+import KeybindManager from "../keybind-manager";
 
 const SETTINGS = {
 	PLACEMENT_CONFIGS: {
@@ -203,7 +204,7 @@ class PlacementClient {
 	private mouse: Mouse;
 	private raycastParams: RaycastParams;
 	private profiler: RepeatableProfiler;
-	private keybinds: Map<Keybind, () => void>;
+	private keybindManager: KeybindManager;
 
 	public signals: PlacementClientSignals;
 
@@ -223,14 +224,14 @@ class PlacementClient {
 		this.profiler = new RepeatableProfiler();
 
 		this.signals = new PlacementClientSignals();
-		this.keybinds = new Map();
+		this.keybindManager = new KeybindManager();
 
 		// Set up default keybinds
-		this.keybinds.set(Enum.KeyCode.Q, () => this.raiseLevel());
-		this.keybinds.set(Enum.KeyCode.E, () => this.lowerLevel());
-		this.keybinds.set(Enum.KeyCode.R, () => this.rotate());
-		this.keybinds.set(Enum.KeyCode.C, () => this.cancelPlacement());
-		this.keybinds.set(Enum.UserInputType.MouseButton1, () => this.confirmPlacement());
+		this.keybindManager.addKeybind(Enum.KeyCode.Q, () => this.raiseLevel());
+		this.keybindManager.addKeybind(Enum.KeyCode.E, () => this.lowerLevel());
+		this.keybindManager.addKeybind(Enum.KeyCode.R, () => this.rotate());
+		this.keybindManager.addKeybind(Enum.KeyCode.C, () => this.cancelPlacement());
+		this.keybindManager.addKeybind(Enum.UserInputType.MouseButton1, () => this.confirmPlacement());
 	}
 
 	public initiatePlacement(model?: Model, settings: Partial<ModelSettings> = {}): void {
@@ -297,17 +298,7 @@ class PlacementClient {
 		model.Parent = Workspace;
 
 		// bind all events here
-		this.janitor.connect(UserInputService.InputBegan, (input, processed) => {
-			if (processed === false) {
-				this.keybinds.forEach((callback, key) => {
-					if (key.EnumType === Enum.KeyCode) {
-						if (input.KeyCode === key) callback();
-					} else {
-						if (input.UserInputType === key) callback();
-					}
-				});
-			}
-		});
+		this.janitor.add(this.keybindManager.connect());
 
 		this.mouse.setTargetFilter(mouseTargetFilter);
 		this.mouse.setFilterType(Enum.RaycastFilterType.Exclude);
@@ -388,11 +379,11 @@ class PlacementClient {
 	}
 
 	public addKeybind(keybind: Keybind, action: () => void): void {
-		this.keybinds.set(keybind, action);
+		this.keybindManager.addKeybind(keybind, action);
 	}
 
 	public removeKeybind(keybind: Keybind): void {
-		this.keybinds.delete(keybind);
+		this.keybindManager.removeKeybind(keybind);
 	}
 
 	private raiseLevel(): void {

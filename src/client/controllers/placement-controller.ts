@@ -5,22 +5,30 @@ import { Controller, OnStart } from "@flamework/core";
 import Signal from "@rbxts/signal";
 import { PlotController } from "./plot-controller";
 import { IStructure } from "shared/lib/residential/types";
+import KeybindManager from "client/lib/keybind-manager";
 
 @Controller()
 export class PlacementController implements OnStart {
+	private keybindManager: KeybindManager;
+
 	private placementClient?: PlacementClient;
 	private currentStructure?: IStructure;
 	public signals = {
 		plotAssigned: new Signal<(plot: PlotInstance) => void>(),
 	};
 
-	constructor(private plotController: PlotController) {}
+	constructor(private plotController: PlotController) {
+		this.keybindManager = new KeybindManager();
+
+		// Set up default keybinds
+		this.keybindManager.addKeybind(Enum.KeyCode.G, () => this.placeModel());
+		this.keybindManager.connect();
+	}
 
 	public async onStart() {
 		const plot = await this.plotController.getPlotAsync();
 
 		this.placementClient = new PlacementClient(plot);
-		this.placeModel();
 
 		if (GlobalPlacementSettings.PLACEMENT_CONFIGS.bools.profileRenderStepped === true) {
 			spawn(() => {

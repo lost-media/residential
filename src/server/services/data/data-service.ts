@@ -1,9 +1,8 @@
 import { OnStart, Service } from "@flamework/core";
 import { HttpService, Players } from "@rbxts/services";
-import type { ProfileStore as ProfileStoreType, Profile } from "server/lib/profile-store/types";
+import type { Profile } from "server/lib/profile-store/types";
 import LoggerFactory from "shared/util/logger/factory";
 import { PlayerService } from "../player-service";
-import type { ProfileKey, ProfileSchemaForKey, ProfileSchemas } from "./types";
 
 @Service()
 export class DataService implements OnStart {
@@ -44,7 +43,7 @@ export class DataService implements OnStart {
 	/**
 	 * Sets up a player's profile and handles session events.
 	 */
-	public attachProfileToPlayer(player: Player, profile: Profile<unknown>): void {
+	public attachProfileToPlayer<T>(player: Player, profile: Profile<T>): void {
 		profile.AddUserId(player.UserId);
 		profile.Reconcile();
 

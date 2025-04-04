@@ -1,5 +1,5 @@
 import { Players, TweenService, UserInputService, Workspace } from "@rbxts/services";
-import { PlacementState, Platform, ModelSettings } from "./types";
+import { PlacementState, Platform, ModelSettings, Keybind } from "./types";
 import Signal from "@rbxts/signal";
 import { setModelAnchored, setModelCanCollide, setModelRelativeTransparency } from "shared/util/instance-utils";
 import { Trove } from "@rbxts/trove";
@@ -203,6 +203,7 @@ class PlacementClient {
 	private mouse: Mouse;
 	private raycastParams: RaycastParams;
 	private profiler: RepeatableProfiler;
+	private keybinds: Map<Keybind, () => void>;
 
 	public signals: PlacementClientSignals;
 
@@ -222,6 +223,14 @@ class PlacementClient {
 		this.profiler = new RepeatableProfiler();
 
 		this.signals = new PlacementClientSignals();
+		this.keybinds = new Map();
+
+		// Set up default keybinds
+		this.keybinds.set(Enum.KeyCode.Q, () => this.raiseLevel());
+		this.keybinds.set(Enum.KeyCode.E, () => this.lowerLevel());
+		this.keybinds.set(Enum.KeyCode.R, () => this.rotate());
+		this.keybinds.set(Enum.KeyCode.C, () => this.cancelPlacement());
+		this.keybinds.set(Enum.UserInputType.MouseButton1, () => this.confirmPlacement());
 	}
 
 	public initiatePlacement(model?: Model, settings: Partial<ModelSettings> = {}): void {
@@ -290,17 +299,13 @@ class PlacementClient {
 		// bind all events here
 		this.janitor.connect(UserInputService.InputBegan, (input, processed) => {
 			if (processed === false) {
-				if (input.KeyCode === Enum.KeyCode.Q) {
-					this.raiseLevel();
-				} else if (input.KeyCode === Enum.KeyCode.E) {
-					this.lowerLevel();
-				} else if (input.KeyCode === Enum.KeyCode.R) {
-					this.rotate();
-				} else if (input.KeyCode === Enum.KeyCode.C) {
-					this.cancelPlacement();
-				} else if (input.UserInputType === Enum.UserInputType.MouseButton1) {
-					this.confirmPlacement();
-				}
+				this.keybinds.forEach((callback, key) => {
+					if (key.EnumType === Enum.KeyCode) {
+						if (input.KeyCode === key) callback();
+					} else {
+						if (input.UserInputType === key) callback();
+					}
+				});
 			}
 		});
 
@@ -380,6 +385,14 @@ class PlacementClient {
 		} else {
 			return Platform.PC;
 		}
+	}
+
+	public addKeybind(keybind: Keybind, action: () => void): void {
+		this.keybinds.set(keybind, action);
+	}
+
+	public removeKeybind(keybind: Keybind): void {
+		this.keybinds.delete(keybind);
 	}
 
 	private raiseLevel(): void {

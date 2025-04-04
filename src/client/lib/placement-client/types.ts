@@ -12,6 +12,8 @@ export enum Platform {
 	PC,
 }
 
+export type Keybind = Enum.KeyCode | Enum.UserInputType;
+
 export interface ModelSettings {
 	canStack: boolean;
 	radius: number;

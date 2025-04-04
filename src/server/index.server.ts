@@ -14,7 +14,6 @@ const serverCmdrHooksFolder = serverCmdrFolder?.FindFirstChild("hooks");
 
 // Add all paths to Flamework here
 Flamework.addPaths("src/server/services");
-//Flamework.addPaths("src/shared/networking");
 
 try {
 	Flamework.ignite();

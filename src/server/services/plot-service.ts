@@ -17,6 +17,7 @@ import { RepeatableProfiler } from "shared/util/profiler";
 export class PlotService implements OnInit, OnStart {
 	public signals = {
 		onStructurePlaced: new Signal<(plot: Plot, structure: IStructureInstance) => void>(),
+		onStructuresUpdated: new Signal<(plot: Plot) => void>(),
 		onPlotAssigned: new Signal<(player: Player, plot: Plot) => void>(),
 	};
 
@@ -89,6 +90,7 @@ export class PlotService implements OnInit, OnStart {
 			// Keep the third argument false because it's an absolute position, not relative
 			playersPlot.addStructure(newStructure, cframe, false);
 			this.signals.onStructurePlaced.Fire(playersPlot, newStructure);
+			this.signals.onStructuresUpdated.Fire(playersPlot);
 		} catch (e) {
 			LoggerFactory.getLogger().log(`Error placing structure: ${e}`);
 		}
@@ -101,18 +103,34 @@ export class PlotService implements OnInit, OnStart {
 		const profiler = new RepeatableProfiler();
 
 		profiler.tic();
+
 		serializedPlot.structures.forEach((structure) => {
-			const newStructure = getStructureById(structure.structureId);
-			if (newStructure !== undefined && structure.cframe !== undefined) {
-				const newStructureInstance = new StructureInstance(structure.uuid, newStructure);
-				const cframe = componentsArrayToCFrame(structure.cframe);
-				playersPlot.addStructure(newStructureInstance, cframe, true);
+			try {
+				const newStructure = getStructureById(structure.structureId);
+				if (newStructure !== undefined && structure.cframe !== undefined) {
+					const newStructureInstance = new StructureInstance(structure.uuid, newStructure);
+					const cframe = componentsArrayToCFrame(structure.cframe);
+					playersPlot.addStructure(newStructureInstance, cframe, true);
+				}
+			} catch (e) {
+				print(e);
 			}
 		});
+
+		this.signals.onStructuresUpdated.Fire(playersPlot);
+
 		profiler.toc();
 
 		print(
 			`[PlotService]: Took ${profiler.getFormattedAverage()} to load ${serializedPlot.structures.size()} structures`,
 		);
+	}
+
+	public clearPlot(player: Player): void {
+		const playersPlot = PlotFactory.getPlayersPlot(player);
+		assert(playersPlot !== undefined, `[PlotService:placeStructure]: Player "${player.Name}" doesn't have a plot`);
+
+		playersPlot.clear();
+		this.signals.onStructuresUpdated.Fire(playersPlot);
 	}
 }

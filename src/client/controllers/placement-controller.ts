@@ -25,9 +25,12 @@ export class PlacementController implements OnStart {
 			.then((plot) => {
 				this.placementClient = new PlacementClient(plot);
 
+				const structure = chooseRandomStructure();
 				// Set up default keybinds
-				this.keybindManager.addKeybind(Enum.KeyCode.G, () => this.placeModel());
-				this.keybindManager.connect();
+				if (structure !== undefined) {
+					this.keybindManager.addKeybind(Enum.KeyCode.G, () => this.placeModel(structure));
+					this.keybindManager.connect();
+				}
 			})
 			.catch(() => {});
 	}
@@ -43,11 +46,11 @@ export class PlacementController implements OnStart {
 		}
 	}
 
-	public async placeModel(): Promise<void> {
+	public async placeModel(structure: IStructure): Promise<void> {
 		if (this.placementClient !== undefined) {
 			try {
-				this.currentStructure = chooseRandomStructure();
-				this.placementClient.initiatePlacement(this.currentStructure?.model.Clone());
+				this.currentStructure = structure;
+				this.placementClient.initiatePlacement(structure.model.Clone());
 				const onCancelledConnection = this.placementClient.signals.onCancelled.Connect(() => {
 					onCancelledConnection.Disconnect();
 				});

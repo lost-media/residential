@@ -61,18 +61,18 @@ export class PlotDataService implements OnStart {
 				} else {
 					// create a plot
 					this.createNewPlot(player, {
-						plotName: "TESTTT",
+						plotName: "Test",
 						lastLogin: DateTime.now().UnixTimestampMillis,
 					});
 				}
 			}
 		});
 
-		this.plotService.signals.onStructurePlaced.Connect((plot, structure) => {
+		this.plotService.signals.onStructuresUpdated.Connect((plot) => {
 			const player = plot.getPlayer();
 
 			if (player !== undefined) {
-				const profile = this.getProfile(player.UserId);
+				const profile = this.getPlot(player);
 
 				if (profile !== undefined) {
 					profile.Data.plot = plot.serialize();
@@ -81,9 +81,7 @@ export class PlotDataService implements OnStart {
 		});
 	}
 
-	public getProfile(userId: number) {
-		const player = Players.GetPlayerByUserId(userId);
-
+	public getPlot(player: Player) {
 		if (player !== undefined) {
 			return this.plotProfiles.get(player);
 		}
@@ -92,6 +90,7 @@ export class PlotDataService implements OnStart {
 	public loadPlot(player: Player, uuid: string): Optional<Profile<PlotProfileSchema>> {
 		const profile = this.profileStore.StartSessionAsync(uuid, {});
 		if (profile !== undefined) {
+			profile.Data.uuid = uuid;
 			this.initializeProfile(player, profile);
 
 			// load the Physical plot
@@ -122,10 +121,26 @@ export class PlotDataService implements OnStart {
 		return loadedSession;
 	}
 
-	public erasePlot(ownerId: number, uuid: string): boolean {
+	public deletePlot(ownerId: number, uuid: string): boolean {
 		// erase all traces of the plot
 		this.playerDataService.erasePlot(ownerId, uuid);
+
+		// clear the plot
+		const player = Players.GetPlayerByUserId(ownerId);
+
+		if (player !== undefined) {
+			this.plotService.clearPlot(player);
+		}
+
 		return this.profileStore.RemoveAsync(uuid);
+	}
+
+	public clearPlot(ownerId: number, uuid: string): void {
+		const player = Players.GetPlayerByUserId(ownerId);
+
+		if (player !== undefined) {
+			this.plotService.clearPlot(player);
+		}
 	}
 
 	private initializeProfile(player: Player, profile: Profile<PlotProfileSchema>): void {

@@ -1,12 +1,12 @@
-import { MODELS_FOLDER } from 'shared/lib/residential/configs';
-import { Koins } from 'shared/lib/residential/currency';
-import type { IStructure } from 'shared/lib/residential/types';
+import { MODELS_FOLDER } from "shared/lib/residential/configs";
+import { Koins } from "shared/lib/residential/currency";
+import type { IStructure } from "shared/lib/residential/types";
 const structure: IStructure = {
-	id: 'road-curved',
+	id: "road-curved",
 
-	name: 'Curved Road',
-	description: 'A curved road.',
-	model: MODELS_FOLDER?.Road.FindFirstChild('NormalRoad') as Model,
+	name: "Curved Road",
+	description: "A curved road.",
+	model: MODELS_FOLDER?.Road.FindFirstChild("NormalRoad") as Model,
 
 	price: {
 		value: 100,

@@ -1,4 +1,4 @@
-import React, { type DependencyList } from '@rbxts/react';
+import React, { type DependencyList } from "@rbxts/react";
 
 export default function useSignal<T>(
 	signal: RBXScriptSignal,

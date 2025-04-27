@@ -1,12 +1,12 @@
-import { type OnStart, Service } from '@flamework/core';
-import { Players } from '@rbxts/services';
-import Signal from '@rbxts/signal';
-import type { SerializedPlotInstance } from 'server/lib/plot';
-import ProfileStore from 'server/lib/profile-store';
-import type { Profile } from 'server/lib/profile-store/types';
-import { PLAYER_PROFILE_STORE_KEY } from 'server/utils/constants';
-import type { PlayerService } from '../player-service';
-import type { DataService } from './data-service';
+import { type OnStart, Service } from "@flamework/core";
+import { Players } from "@rbxts/services";
+import Signal from "@rbxts/signal";
+import type { SerializedPlotInstance } from "server/lib/plot";
+import ProfileStore from "server/lib/profile-store";
+import type { Profile } from "server/lib/profile-store/types";
+import { PLAYER_PROFILE_STORE_KEY } from "server/utils/constants";
+import type { PlayerService } from "../player-service";
+import type { DataService } from "./data-service";
 
 export type SerializedPlot = {
 	uuid: string;

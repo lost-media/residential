@@ -1,7 +1,7 @@
-import { Assert, Decorators } from '@rbxts/lunit';
-import { StructureCategories } from 'shared/lib/residential/structures';
+import { Assert, Decorators } from "@rbxts/lunit";
+import { StructureCategories } from "shared/lib/residential/structures";
 
-@Decorators.Tag('Library')
+@Decorators.Tag("Library")
 class TestStructureLibrary {
 	@Decorators.Test
 	hasCorrectNumberOfKeys() {

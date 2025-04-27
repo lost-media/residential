@@ -1,6 +1,6 @@
-import { PLAYER_PROFILE_STORE_KEY, PLOT_PROFILE_STORE_KEY } from 'server/utils/constants';
-import type { PlayerProfileSchema } from './player-data-service';
-import type { PlotProfileSchema } from './plot-data-service';
+import { PLAYER_PROFILE_STORE_KEY, PLOT_PROFILE_STORE_KEY } from "server/utils/constants";
+import type { PlayerProfileSchema } from "./player-data-service";
+import type { PlotProfileSchema } from "./plot-data-service";
 
 /**
  * Defines the schema for all profile stores.

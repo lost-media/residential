@@ -1,15 +1,15 @@
-import React, { useState } from '@rbxts/react';
-import { type TooltipComponent, type TooltipDirection, useTooltip } from '@rbxts/react-tooltip';
-import Circle from 'client/ui/base/circle';
-import Stripe from 'client/ui/base/stripe';
-import type { ColorToken } from 'client/ui/theme';
-import { BasicTooltip } from '../tooltips';
+import React, { useState } from "@rbxts/react";
+import { type TooltipComponent, type TooltipDirection, useTooltip } from "@rbxts/react-tooltip";
+import Circle from "client/ui/base/circle";
+import Stripe from "client/ui/base/stripe";
+import type { ColorToken } from "client/ui/theme";
+import { BasicTooltip } from "../tooltips";
 
-import { useSprings } from 'client/ui/hooks/useSpring';
+import { useSprings } from "client/ui/hooks/useSpring";
 
-import { Image, Padding, Scale, SizeConstraint } from '../lib';
+import { Image, Padding, Scale, SizeConstraint } from "../lib";
 
-import theme from 'client/ui/theme';
+import theme from "client/ui/theme";
 
 export interface ButtonProps {
 	variant: ColorToken;
@@ -33,7 +33,7 @@ export interface CircularButtonProps extends ButtonProps {
 
 export function CircularButton(props: Partial<CircularButtonProps>) {
 	const { showTooltip, hideTooltip, updatePosition, updateSize } = useTooltip({
-		direction: props.tooltipDirection ?? 'top',
+		direction: props.tooltipDirection ?? "top",
 		delay: props.tooltipDelay ?? 0.25,
 		component: props.tooltipComponent ?? BasicTooltip,
 	});
@@ -83,7 +83,7 @@ export function CircularButton(props: Partial<CircularButtonProps>) {
 				<Stripe onClick={props.onClick} size={new UDim2(1, 0, 1, 0)}>
 					<Padding all={new UDim(0.2, 0)} />
 					<Image
-						image={'rbxassetid://18476991644'}
+						image={"rbxassetid://18476991644"}
 						Position={new UDim2(0.5, 0, 0.5, 0)}
 						AnchorPoint={new Vector2(0.5, 0.5)}
 						Size={new UDim2(1, 0, 1, 0)}

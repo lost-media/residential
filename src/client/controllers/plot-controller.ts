@@ -1,6 +1,6 @@
-import { Controller, type OnStart } from '@flamework/core';
-import Signal from '@rbxts/signal';
-import { clientEvents } from 'client/utils/networking';
+import { Controller, type OnStart } from "@flamework/core";
+import Signal from "@rbxts/signal";
+import { clientEvents } from "client/utils/networking";
 
 @Controller()
 export class PlotController implements OnStart {

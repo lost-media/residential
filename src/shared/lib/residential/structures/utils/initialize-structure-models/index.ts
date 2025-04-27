@@ -1,8 +1,8 @@
-import { Assert } from '@rbxts/lunit';
-import { ID_ATTRIBUTE_KEY } from 'shared/lib/residential/configs';
-import type { IStructure } from 'shared/lib/residential/types';
-import { weldModelToPrimaryPart } from 'shared/util/instance-utils';
-import LoggerFactory, { LogLevel } from 'shared/util/logger/factory';
+import { Assert } from "@rbxts/lunit";
+import { ID_ATTRIBUTE_KEY } from "shared/lib/residential/configs";
+import type { IStructure } from "shared/lib/residential/types";
+import { weldModelToPrimaryPart } from "shared/util/instance-utils";
+import LoggerFactory, { LogLevel } from "shared/util/logger/factory";
 
 export function initializeStructure(structure: IStructure): void {
 	Assert.notUndefined(

@@ -1,19 +1,19 @@
-import { Flamework } from '@flamework/core';
-import { Cmdr } from '@rbxts/cmdr';
-import { TestRunner } from '@rbxts/lunit';
-import { StructureCategories } from 'shared/lib/residential/structures';
-import { initializeStructure } from 'shared/lib/residential/structures/utils/initialize-structure-models';
-import LoggerFactory, { LogLevel } from 'shared/util/logger/factory';
+import { Flamework } from "@flamework/core";
+import { Cmdr } from "@rbxts/cmdr";
+import { TestRunner } from "@rbxts/lunit";
+import { StructureCategories } from "shared/lib/residential/structures";
+import { initializeStructure } from "shared/lib/residential/structures/utils/initialize-structure-models";
+import LoggerFactory, { LogLevel } from "shared/util/logger/factory";
 
 const TESTS_ENABLED = true;
-const serverUnitTestsFolder = script.FindFirstChild('tests');
+const serverUnitTestsFolder = script.FindFirstChild("tests");
 
-const serverCmdrFolder = script.FindFirstChild('cmdr');
-const serverCmdrCommandsFolder = serverCmdrFolder?.FindFirstChild('commands');
-const serverCmdrHooksFolder = serverCmdrFolder?.FindFirstChild('hooks');
+const serverCmdrFolder = script.FindFirstChild("cmdr");
+const serverCmdrCommandsFolder = serverCmdrFolder?.FindFirstChild("commands");
+const serverCmdrHooksFolder = serverCmdrFolder?.FindFirstChild("hooks");
 
 // Add all paths to Flamework here
-Flamework.addPaths('src/server/services');
+Flamework.addPaths("src/server/services");
 
 try {
 	Flamework.ignite();
@@ -27,7 +27,7 @@ try {
 		Cmdr.RegisterHooksIn(serverCmdrHooksFolder);
 	}
 
-	LoggerFactory.getLogger().log('Server started', LogLevel.Info);
+	LoggerFactory.getLogger().log("Server started", LogLevel.Info);
 
 	// Weld all parts in structures
 	StructureCategories.forEach((_, category) => {
@@ -36,17 +36,17 @@ try {
 		});
 	});
 
-	LoggerFactory.getLogger().log('Welded all structures to primary parts', LogLevel.Info);
+	LoggerFactory.getLogger().log("Welded all structures to primary parts", LogLevel.Info);
 
 	if (TESTS_ENABLED) {
-		LoggerFactory.getLogger().log('Running tests...', LogLevel.Info);
+		LoggerFactory.getLogger().log("Running tests...", LogLevel.Info);
 		// Run tests here
 		if (serverUnitTestsFolder !== undefined) {
 			const testRunner = new TestRunner([serverUnitTestsFolder]);
 			testRunner
 				.run()
 				.then(() => {
-					LoggerFactory.getLogger().log('Tests complete', LogLevel.Info);
+					LoggerFactory.getLogger().log("Tests complete", LogLevel.Info);
 				})
 				.catch((e) => {
 					LoggerFactory.getLogger().log(`Failed to run tests: ${e}`, LogLevel.Error);

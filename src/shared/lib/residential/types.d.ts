@@ -1,4 +1,4 @@
-import type { Currency } from 'shared/lib/residential/currency';
+import type { Currency } from "shared/lib/residential/currency";
 
 export type Price = {
 	value: number;
@@ -7,7 +7,7 @@ export type Price = {
 
 export type StructureAttachment = {
 	attachmentName: string;
-	type: 'solo' | 'group' | 'pair'; // Defines how the attachment is used
+	type: "solo" | "group" | "pair"; // Defines how the attachment is used
 	pairedWith?: string[];
 };
 

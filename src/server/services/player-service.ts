@@ -1,5 +1,5 @@
-import { Service } from '@flamework/core';
-import { Players } from '@rbxts/services';
+import { Service } from "@flamework/core";
+import { Players } from "@rbxts/services";
 
 @Service()
 export class PlayerService {

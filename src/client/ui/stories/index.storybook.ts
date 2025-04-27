@@ -1,7 +1,7 @@
-import type { Storybook } from '@rbxts/ui-labs';
+import type { Storybook } from "@rbxts/ui-labs";
 
 const storybook: Storybook = {
-	name: 'Stories',
+	name: "Stories",
 	storyRoots: [script.Parent as Instance],
 };
 

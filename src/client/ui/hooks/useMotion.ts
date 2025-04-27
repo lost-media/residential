@@ -1,8 +1,8 @@
-import { useEffect } from '@rbxts/react';
-import { type Binding, useBinding, useMemo } from '@rbxts/react';
-import type { MotionGoal } from '@rbxts/ripple';
-import { type Motion, createMotion } from '@rbxts/ripple';
-import { RunService } from '@rbxts/services';
+import { useEffect } from "@rbxts/react";
+import { type Binding, useBinding, useMemo } from "@rbxts/react";
+import type { MotionGoal } from "@rbxts/ripple";
+import { type Motion, createMotion } from "@rbxts/ripple";
+import { RunService } from "@rbxts/services";
 
 export function useMotion<T extends MotionGoal>(initialValue: T): LuaTuple<[Binding<T>, Motion<T>]>;
 

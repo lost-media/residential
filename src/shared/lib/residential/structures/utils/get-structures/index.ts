@@ -1,6 +1,6 @@
-import { ID_ATTRIBUTE_KEY } from 'shared/lib/residential/configs';
-import type { IStructure } from 'shared/lib/residential/types';
-import { StructureCategories } from '../..';
+import { ID_ATTRIBUTE_KEY } from "shared/lib/residential/configs";
+import type { IStructure } from "shared/lib/residential/types";
+import { StructureCategories } from "../..";
 
 export function getStructureById(structureId: string): Optional<IStructure> {
 	let structure: Optional<IStructure> = undefined;

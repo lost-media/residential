@@ -2,7 +2,7 @@
  * Function: Broadcast meaningful, formatted messages
  */
 
-import { RunService } from '@rbxts/services';
+import { RunService } from "@rbxts/services";
 
 export enum LogLevel {
 	Debug = 0,
@@ -11,20 +11,20 @@ export enum LogLevel {
 	Error = 3,
 }
 
-const DEFAULT_SCOPE = 'lm-engine';
+const DEFAULT_SCOPE = "lm-engine";
 
 export function logLevelToString(logLevel: LogLevel): string {
 	switch (logLevel) {
 		case LogLevel.Debug:
-			return 'DEBUG';
+			return "DEBUG";
 		case LogLevel.Info:
-			return 'INFO';
+			return "INFO";
 		case LogLevel.Warning:
-			return 'WARNING';
+			return "WARNING";
 		case LogLevel.Error:
-			return 'ERROR';
+			return "ERROR";
 		default:
-			return 'LOG';
+			return "LOG";
 	}
 }
 
@@ -49,7 +49,7 @@ export class Logger implements ILogger {
 	public format(message: string, logLevel: LogLevel, scope: string = DEFAULT_SCOPE): string {
 		const logString = logLevelToString(logLevel);
 
-		return `[${scope}] - [${RunService.IsClient() ? 'CLIENT' : 'SERVER'}] - ${logString} - ${message}`;
+		return `[${scope}] - [${RunService.IsClient() ? "CLIENT" : "SERVER"}] - ${logString} - ${message}`;
 	}
 }
 
@@ -81,6 +81,6 @@ export class LoggerWithHistory implements ILogger {
 	public format(message: string, logLevel: LogLevel, scope: string = DEFAULT_SCOPE): string {
 		const logString = logLevelToString(logLevel);
 
-		return `[${scope}] - [${RunService.IsClient() ? 'CLIENT' : 'SERVER'}] - ${logString} - ${message}`;
+		return `[${scope}] - [${RunService.IsClient() ? "CLIENT" : "SERVER"}] - ${logString} - ${message}`;
 	}
 }

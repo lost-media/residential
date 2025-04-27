@@ -7,13 +7,13 @@ export interface Currency {
 // create typed currency objects
 
 export const Koins: Currency = {
-	verboseName: 'Koin',
-	verboseNamePlural: 'Koins',
-	icon: 'rbxassetid://0',
+	verboseName: "Koin",
+	verboseNamePlural: "Koins",
+	icon: "rbxassetid://0",
 };
 
 export const Roadbucks: Currency = {
-	verboseName: 'Roadbuck',
-	verboseNamePlural: 'Roadbucks',
-	icon: 'rbxassetid://0',
+	verboseName: "Roadbuck",
+	verboseNamePlural: "Roadbucks",
+	icon: "rbxassetid://0",
 };

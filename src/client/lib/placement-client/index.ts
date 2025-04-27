@@ -1,15 +1,15 @@
-import { Players, TweenService, UserInputService, Workspace } from '@rbxts/services';
-import Signal from '@rbxts/signal';
-import { Trove } from '@rbxts/trove';
-import { PLATFORM_INSTANCE_NAME, PLOT_STRUCTURES_FOLDER_NAME } from 'shared/lib/plot/configs';
-import { hitboxIsCollidedInPlot } from 'shared/lib/plot/utils/plot-collisions';
-import { copyArray } from 'shared/util/array-utils';
-import { setModelAnchored, setModelCanCollide, setModelRelativeTransparency } from 'shared/util/instance-utils';
-import { RepeatableProfiler } from 'shared/util/profiler';
-import { visualizeRaycast } from 'shared/util/raycast-utils';
-import KeybindManager from '../keybind-manager';
-import Mouse from '../mouse';
-import { type Keybind, type ModelSettings, PlacementState, Platform } from './types';
+import { Players, TweenService, UserInputService, Workspace } from "@rbxts/services";
+import Signal from "@rbxts/signal";
+import { Trove } from "@rbxts/trove";
+import { PLATFORM_INSTANCE_NAME, PLOT_STRUCTURES_FOLDER_NAME } from "shared/lib/plot/configs";
+import { hitboxIsCollidedInPlot } from "shared/lib/plot/utils/plot-collisions";
+import { copyArray } from "shared/util/array-utils";
+import { setModelAnchored, setModelCanCollide, setModelRelativeTransparency } from "shared/util/instance-utils";
+import { RepeatableProfiler } from "shared/util/profiler";
+import { visualizeRaycast } from "shared/util/raycast-utils";
+import KeybindManager from "../keybind-manager";
+import Mouse from "../mouse";
+import { type Keybind, type ModelSettings, PlacementState, Platform } from "./types";
 
 const SETTINGS = {
 	PLACEMENT_CONFIGS: {
@@ -288,7 +288,7 @@ class PlacementClient {
 		this.stateMachine.setHitbox(hitbox);
 
 		hitbox.Transparency = 1;
-		hitbox.Name = 'Hitbox';
+		hitbox.Name = "Hitbox";
 		hitbox.Parent = model;
 
 		model.PrimaryPart.Anchored = false;
@@ -310,7 +310,7 @@ class PlacementClient {
 
 		this.state = PlacementState.MOVING;
 
-		this.janitor.bindToRenderStep('Input', Enum.RenderPriority.Input.Value, (dt) => {
+		this.janitor.bindToRenderStep("Input", Enum.RenderPriority.Input.Value, (dt) => {
 			// Profile the render stepped function
 			if (SETTINGS.PLACEMENT_CONFIGS.bools.profileRenderStepped === true) {
 				this.profiler.tic();
@@ -495,7 +495,7 @@ class PlacementClient {
 
 		const gridSize = SETTINGS.PLACEMENT_CONFIGS.integers.gridSize;
 
-		const camera = Workspace.CurrentCamera ?? new Instance('Camera');
+		const camera = Workspace.CurrentCamera ?? new Instance("Camera");
 		Workspace.CurrentCamera = camera;
 
 		let sizeX: number = modelPrimaryPart.Size.X * 0.5;

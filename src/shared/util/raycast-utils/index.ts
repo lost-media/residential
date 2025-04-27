@@ -1,5 +1,5 @@
 export function visualizeRaycast(raycastResult: RaycastResult, originPosition: Vector3): BasePart {
-	const part = new Instance('Part');
+	const part = new Instance("Part");
 	part.Anchored = true;
 	part.CanCollide = false;
 	part.Transparency = 0.9;

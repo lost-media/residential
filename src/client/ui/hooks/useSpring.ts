@@ -1,14 +1,14 @@
-import React, { useEffect, useRef } from '@rbxts/react';
-import { type Binding, useBinding, useMemo } from '@rbxts/react';
-import type { MotionGoal, SpringOptions } from '@rbxts/ripple';
-import { Motion, createMotion } from '@rbxts/ripple';
-import { RunService } from '@rbxts/services';
-import { useMotion } from './useMotion';
-import useSignal from './useSignal';
+import React, { useEffect, useRef } from "@rbxts/react";
+import { type Binding, useBinding, useMemo } from "@rbxts/react";
+import type { MotionGoal, SpringOptions } from "@rbxts/ripple";
+import { Motion, createMotion } from "@rbxts/ripple";
+import { RunService } from "@rbxts/services";
+import { useMotion } from "./useMotion";
+import useSignal from "./useSignal";
 
 function getBindingValue<T extends MotionGoal>(goal: T | Binding<T>): T {
 	// check if T is a binding type
-	if (typeIs(goal, 'table') && (goal as Binding<T>).getValue) {
+	if (typeIs(goal, "table") && (goal as Binding<T>).getValue) {
 		return (goal as Binding<T>).getValue();
 	} else {
 		return goal as T;

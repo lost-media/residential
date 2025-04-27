@@ -1,4 +1,4 @@
-import { Players } from '@rbxts/services';
+import { Players } from "@rbxts/services";
 
 export function getAllCharacters(): Character[] {
 	const players = Players.GetPlayers();

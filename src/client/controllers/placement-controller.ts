@@ -1,11 +1,11 @@
-import PlacementClient, { GlobalPlacementSettings } from "client/lib/placement-client";
-import { chooseRandomStructure } from "shared/lib/residential/structures/utils/choose-random-structure";
-import LoggerFactory from "shared/util/logger/factory";
-import { Controller, OnStart } from "@flamework/core";
-import Signal from "@rbxts/signal";
-import { PlotController } from "./plot-controller";
-import { IStructure } from "shared/lib/residential/types";
-import KeybindManager from "client/lib/keybind-manager";
+import { Controller, type OnStart } from '@flamework/core';
+import Signal from '@rbxts/signal';
+import KeybindManager from 'client/lib/keybind-manager';
+import PlacementClient, { GlobalPlacementSettings } from 'client/lib/placement-client';
+import { chooseRandomStructure } from 'shared/lib/residential/structures/utils/choose-random-structure';
+import type { IStructure } from 'shared/lib/residential/types';
+import LoggerFactory from 'shared/util/logger/factory';
+import type { PlotController } from './plot-controller';
 
 @Controller()
 export class PlacementController implements OnStart {

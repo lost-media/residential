@@ -1,5 +1,6 @@
-import React, { Binding, InstanceChangeEvent } from "@rbxts/react";
-import theme from "../theme";
+import type React from '@rbxts/react';
+import type { Binding, InstanceChangeEvent } from '@rbxts/react';
+import theme from '../theme';
 
 interface StripeProps {
 	active?: boolean;

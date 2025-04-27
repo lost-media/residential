@@ -1,15 +1,15 @@
 export enum PlacementState {
-	MOVING,
-	PLACING,
-	COLLIDING,
-	INACTIVE,
-	OUT_OF_RANGE,
+	MOVING = 0,
+	PLACING = 1,
+	COLLIDING = 2,
+	INACTIVE = 3,
+	OUT_OF_RANGE = 4,
 }
 
 export enum Platform {
-	MOBILE,
-	CONSOLE,
-	PC,
+	MOBILE = 0,
+	CONSOLE = 1,
+	PC = 2,
 }
 
 export type Keybind = Enum.KeyCode | Enum.UserInputType;

@@ -1,7 +1,7 @@
-import { Assert } from "@rbxts/lunit";
-import Plot from ".";
-import { LinkedList } from "shared/lib/data-structures/linked-list";
-import { PLATFORM_INSTANCE_NAME, PLOT_STRUCTURES_FOLDER_NAME } from "shared/lib/plot/configs";
+import { Assert } from '@rbxts/lunit';
+import { LinkedList } from 'shared/lib/data-structures/linked-list';
+import { PLATFORM_INSTANCE_NAME, PLOT_STRUCTURES_FOLDER_NAME } from 'shared/lib/plot/configs';
+import Plot from '.';
 
 class PlotFactory {
 	private static plots: LinkedList<Instance, Plot> = new LinkedList();

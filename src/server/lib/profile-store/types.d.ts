@@ -18,7 +18,7 @@ export interface Profile<T> {
 	UserIds: number[];
 	KeyInfo: DataStoreKeyInfo;
 	OnSave: Signal<void>;
-	OnLastSave: Signal<"Manual" | "External" | "Shutdown">;
+	OnLastSave: Signal<'Manual' | 'External' | 'Shutdown'>;
 	OnSessionEnd: Signal<void>;
 	OnAfterSave: Signal<T & JSONAcceptable>;
 	ProfileStore: JSONAcceptable;
@@ -52,13 +52,13 @@ export interface ProfileStore<T> {
 }
 
 export type ConstantName =
-	| "AUTO_SAVE_PERIOD"
-	| "LOAD_REPEAT_PERIOD"
-	| "FIRST_LOAD_REPEAT"
-	| "SESSION_STEAL"
-	| "ASSUME_DEAD"
-	| "START_SESSION_TIMEOUT"
-	| "CRITICAL_STATE_ERROR_COUNT"
-	| "CRITICAL_STATE_ERROR_EXPIRE"
-	| "CRITICAL_STATE_EXPIRE"
-	| "MAX_MESSAGE_QUEUE";
+	| 'AUTO_SAVE_PERIOD'
+	| 'LOAD_REPEAT_PERIOD'
+	| 'FIRST_LOAD_REPEAT'
+	| 'SESSION_STEAL'
+	| 'ASSUME_DEAD'
+	| 'START_SESSION_TIMEOUT'
+	| 'CRITICAL_STATE_ERROR_COUNT'
+	| 'CRITICAL_STATE_ERROR_EXPIRE'
+	| 'CRITICAL_STATE_EXPIRE'
+	| 'MAX_MESSAGE_QUEUE';

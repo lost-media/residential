@@ -1,14 +1,14 @@
-import ProfileStore from "server/lib/profile-store";
-import { OnStart, Service } from "@flamework/core";
-import { DataService } from "./data-service";
-import Plot, { SerializedPlotInstance } from "server/lib/plot";
-import { PLOT_PROFILE_STORE_KEY } from "server/utils/constants";
-import { Profile } from "server/lib/profile-store/types";
-import { PlayerService } from "../player-service";
-import { Players } from "@rbxts/services";
-import { PlayerDataService, PlotMetadata } from "./player-data-service";
-import { PlotService } from "../plot-service";
-import { getKeysFromMap } from "shared/util/array-utils";
+import { type OnStart, Service } from '@flamework/core';
+import { Players } from '@rbxts/services';
+import Plot, { type SerializedPlotInstance } from 'server/lib/plot';
+import ProfileStore from 'server/lib/profile-store';
+import type { Profile } from 'server/lib/profile-store/types';
+import { PLOT_PROFILE_STORE_KEY } from 'server/utils/constants';
+import { getKeysFromMap } from 'shared/util/array-utils';
+import type { PlayerService } from '../player-service';
+import type { PlotService } from '../plot-service';
+import type { DataService } from './data-service';
+import type { PlayerDataService, PlotMetadata } from './player-data-service';
 
 export type SerializedPlot = {
 	uuid: string;
@@ -24,7 +24,7 @@ export type SerializedPlot = {
 export type PlotProfileSchema = SerializedPlot;
 
 const defaultPlotProfile: PlotProfileSchema = {
-	uuid: "",
+	uuid: '',
 	ownerId: -1,
 	currencies: {
 		koins: 0,
@@ -32,7 +32,7 @@ const defaultPlotProfile: PlotProfileSchema = {
 	plot: Plot.getEmptySerializedPlotInstance(),
 	metadata: {
 		lastLogin: -1,
-		plotName: "",
+		plotName: '',
 	},
 };
 
@@ -61,7 +61,7 @@ export class PlotDataService implements OnStart {
 				} else {
 					// create a plot
 					this.createNewPlot(player, {
-						plotName: "Test",
+						plotName: 'Test',
 						lastLogin: DateTime.now().UnixTimestampMillis,
 					});
 				}

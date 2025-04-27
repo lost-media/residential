@@ -1,4 +1,4 @@
-import { UserInputService } from "@rbxts/services";
+import { UserInputService } from '@rbxts/services';
 
 export type Keybind = Enum.UserInputType | Enum.KeyCode;
 type Action = () => void;

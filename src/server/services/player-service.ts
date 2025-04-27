@@ -1,5 +1,5 @@
-import { Service } from "@flamework/core";
-import { Players } from "@rbxts/services";
+import { Service } from '@flamework/core';
+import { Players } from '@rbxts/services';
 
 @Service()
 export class PlayerService {
@@ -24,9 +24,10 @@ export class PlayerService {
 
 	public addPlayerJoinConnection(callback: (player: Player) => void): void {
 		// If there are players in the server before the event begins, call the callback for each player
-		Players.GetPlayers().forEach((player) => {
+		const players = Players.GetPlayers();
+		for (const player of players) {
 			task.spawn(callback, player);
-		});
+		}
 
 		this.onPlayerJoinedCallbacks.push(callback);
 	}

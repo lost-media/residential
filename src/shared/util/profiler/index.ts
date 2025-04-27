@@ -2,7 +2,7 @@
  * Function: To track the performance of requests for debugging purposes
  */
 
-import { getAverageOfList } from "../array-utils";
+import { getAverageOfList } from '../array-utils';
 
 type Function<T> = () => T;
 
@@ -134,6 +134,6 @@ export class RepeatableProfiler {
 	 * print(`Average Time: ${formattedAverage}`);
 	 */
 	getFormattedAverage(): string {
-		return string.format("%2f s", this.getAverageTime());
+		return string.format('%2f s', this.getAverageTime());
 	}
 }

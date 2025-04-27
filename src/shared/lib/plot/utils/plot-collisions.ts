@@ -1,5 +1,5 @@
-import { Workspace } from "@rbxts/services";
-import { PLOT_STRUCTURES_FOLDER_NAME } from "../configs";
+import { Workspace } from '@rbxts/services';
+import { PLOT_STRUCTURES_FOLDER_NAME } from '../configs';
 
 export function hitboxIsCollidedInPlot(
 	hitbox: BasePart,

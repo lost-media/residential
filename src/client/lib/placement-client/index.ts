@@ -1,15 +1,15 @@
-import { Players, TweenService, UserInputService, Workspace } from "@rbxts/services";
-import { PlacementState, Platform, ModelSettings, Keybind } from "./types";
-import Signal from "@rbxts/signal";
-import { setModelAnchored, setModelCanCollide, setModelRelativeTransparency } from "shared/util/instance-utils";
-import { Trove } from "@rbxts/trove";
-import Mouse from "../mouse";
-import { visualizeRaycast } from "shared/util/raycast-utils";
-import { PLATFORM_INSTANCE_NAME, PLOT_STRUCTURES_FOLDER_NAME } from "shared/lib/plot/configs";
-import { RepeatableProfiler } from "shared/util/profiler";
-import { hitboxIsCollidedInPlot } from "shared/lib/plot/utils/plot-collisions";
-import { copyArray } from "shared/util/array-utils";
-import KeybindManager from "../keybind-manager";
+import { Players, TweenService, UserInputService, Workspace } from '@rbxts/services';
+import Signal from '@rbxts/signal';
+import { Trove } from '@rbxts/trove';
+import { PLATFORM_INSTANCE_NAME, PLOT_STRUCTURES_FOLDER_NAME } from 'shared/lib/plot/configs';
+import { hitboxIsCollidedInPlot } from 'shared/lib/plot/utils/plot-collisions';
+import { copyArray } from 'shared/util/array-utils';
+import { setModelAnchored, setModelCanCollide, setModelRelativeTransparency } from 'shared/util/instance-utils';
+import { RepeatableProfiler } from 'shared/util/profiler';
+import { visualizeRaycast } from 'shared/util/raycast-utils';
+import KeybindManager from '../keybind-manager';
+import Mouse from '../mouse';
+import { type Keybind, type ModelSettings, PlacementState, Platform } from './types';
 
 const SETTINGS = {
 	PLACEMENT_CONFIGS: {
@@ -56,8 +56,8 @@ const SETTINGS = {
 };
 
 class PlacementClientSettings {
-	public repeatPlacement: boolean = true;
-	public isStackable: boolean = false;
+	public repeatPlacement = true;
+	public isStackable = false;
 }
 
 class PlacementClientSignals {
@@ -76,12 +76,12 @@ class PlacementClientStateMachine {
 	// states
 	private angleAmplitude: number = SETTINGS.PLACEMENT_CONFIGS.floats.angleTiltAmplitude;
 	private gridSize: number = SETTINGS.PLACEMENT_CONFIGS.integers.gridSize;
-	private isRotated: boolean = false;
-	private placementInitialized: boolean = false;
+	private isRotated = false;
+	private placementInitialized = false;
 	private model?: Model = undefined;
-	private yLevel: number = 0;
-	private rotation: number = 0;
-	private initialYPosition: number = 0;
+	private yLevel = 0;
+	private rotation = 0;
+	private initialYPosition = 0;
 	private hitbox: BasePart | undefined;
 
 	// signals
@@ -288,7 +288,7 @@ class PlacementClient {
 		this.stateMachine.setHitbox(hitbox);
 
 		hitbox.Transparency = 1;
-		hitbox.Name = "Hitbox";
+		hitbox.Name = 'Hitbox';
 		hitbox.Parent = model;
 
 		model.PrimaryPart.Anchored = false;
@@ -310,7 +310,7 @@ class PlacementClient {
 
 		this.state = PlacementState.MOVING;
 
-		this.janitor.bindToRenderStep("Input", Enum.RenderPriority.Input.Value, (dt) => {
+		this.janitor.bindToRenderStep('Input', Enum.RenderPriority.Input.Value, (dt) => {
 			// Profile the render stepped function
 			if (SETTINGS.PLACEMENT_CONFIGS.bools.profileRenderStepped === true) {
 				this.profiler.tic();
@@ -495,7 +495,7 @@ class PlacementClient {
 
 		const gridSize = SETTINGS.PLACEMENT_CONFIGS.integers.gridSize;
 
-		const camera = Workspace.CurrentCamera ?? new Instance("Camera");
+		const camera = Workspace.CurrentCamera ?? new Instance('Camera');
 		Workspace.CurrentCamera = camera;
 
 		let sizeX: number = modelPrimaryPart.Size.X * 0.5;
@@ -653,7 +653,7 @@ class PlacementClient {
 		return isColliding;
 	}
 
-	private getIgnoreList(ignoreStructures: boolean = true): Instance[] {
+	private getIgnoreList(ignoreStructures = true): Instance[] {
 		const res = new Array<Instance>();
 
 		if (ignoreStructures === false) {

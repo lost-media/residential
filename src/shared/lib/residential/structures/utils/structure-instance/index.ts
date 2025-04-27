@@ -1,5 +1,5 @@
-import type { IStructure, IStructureInstance, SerializedStructureInstance } from "shared/lib/residential/types";
-import { cframeComponentsToArray } from "shared/util/cframe-utils";
+import type { IStructure, IStructureInstance, SerializedStructureInstance } from 'shared/lib/residential/types';
+import { cframeComponentsToArray } from 'shared/util/cframe-utils';
 
 class StructureInstance implements IStructureInstance {
 	public uuid: string;
@@ -56,7 +56,7 @@ class StructureInstance implements IStructureInstance {
 			const primaryPart = model.PrimaryPart;
 
 			if (primaryPart !== undefined) {
-				const attachments = primaryPart.GetChildren().filter((instance) => instance.IsA("Attachment"));
+				const attachments = primaryPart.GetChildren().filter((instance) => instance.IsA('Attachment'));
 				// verify that these are attachments in the configurations
 				const res = attachments.filter((attachment) => {
 					return this.structure.attachments?.find((a) => a.attachmentName === attachment.Name) !== undefined;
@@ -75,7 +75,7 @@ class StructureInstance implements IStructureInstance {
 
 		// Validate orientation or other constraints here
 		// Example: Check if the current structure's orientation matches the attachment's allowed orientation
-		if (attachment.type === "pair") {
+		if (attachment.type === 'pair') {
 			const pairedAttachments = attachment.pairedWith ?? [];
 
 			for (const pairedName of pairedAttachments) {

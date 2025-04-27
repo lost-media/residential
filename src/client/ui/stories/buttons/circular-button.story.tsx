@@ -1,12 +1,12 @@
-import { CircularButton } from "client/ui/components/button";
-import React from "@rbxts/react";
-import ReactRoblox from "@rbxts/react-roblox";
+import React from '@rbxts/react';
+import ReactRoblox from '@rbxts/react-roblox';
+import { CircularButton } from 'client/ui/components/button';
 
-import { CreateReactStory } from "@rbxts/ui-labs";
-import { TooltipProvider } from "@rbxts/react-tooltip";
+import { TooltipProvider } from '@rbxts/react-tooltip';
+import { CreateReactStory } from '@rbxts/ui-labs';
 
 const controls = {
-	text: "Hello, world!!",
+	text: 'Hello, world!!',
 };
 
 const story = CreateReactStory(
@@ -20,9 +20,9 @@ const story = CreateReactStory(
 			<TooltipProvider>
 				<CircularButton
 					variant="primary"
-					text={"Hello world!"}
+					text={'Hello world!'}
 					onClick={() => {
-						print("Button clicked");
+						print('Button clicked');
 					}}
 				/>
 			</TooltipProvider>

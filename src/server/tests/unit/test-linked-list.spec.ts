@@ -1,7 +1,7 @@
-import { LinkedList } from "shared/lib/data-structures/linked-list";
-import { Assert, Decorators } from "@rbxts/lunit";
+import { Assert, Decorators } from '@rbxts/lunit';
+import { LinkedList } from 'shared/lib/data-structures/linked-list';
 
-@Decorators.Tag("Library")
+@Decorators.Tag('Library')
 class TestLinkedList {
 	private testLinkedList: LinkedList<defined, defined> = new LinkedList<number, number>();
 

@@ -1,17 +1,18 @@
-import { Service, OnInit, OnStart } from "@flamework/core";
-import { Workspace } from "@rbxts/services";
-import PlotFactory from "server/lib/plot/factory";
-import LoggerFactory, { LogLevel } from "shared/util/logger/factory";
-import { PlayerService } from "./player-service";
-import { serverEvents } from "server/utils/networking";
-import Signal from "@rbxts/signal";
-import Plot, { SerializedPlotInstance } from "server/lib/plot";
-import { getStructureById } from "shared/lib/residential/structures/utils/get-structures";
-import StructureInstance from "shared/lib/residential/structures/utils/structure-instance";
-import { DataService } from "./data/data-service";
-import { IStructureInstance } from "shared/lib/residential/types";
-import { componentsArrayToCFrame } from "shared/util/cframe-utils";
-import { RepeatableProfiler } from "shared/util/profiler";
+import { type OnInit, type OnStart, Service } from '@flamework/core';
+import { Workspace } from '@rbxts/services';
+import Signal from '@rbxts/signal';
+import type Plot from 'server/lib/plot';
+import type { SerializedPlotInstance } from 'server/lib/plot';
+import PlotFactory from 'server/lib/plot/factory';
+import { serverEvents } from 'server/utils/networking';
+import { getStructureById } from 'shared/lib/residential/structures/utils/get-structures';
+import StructureInstance from 'shared/lib/residential/structures/utils/structure-instance';
+import type { IStructureInstance } from 'shared/lib/residential/types';
+import { componentsArrayToCFrame } from 'shared/util/cframe-utils';
+import LoggerFactory, { LogLevel } from 'shared/util/logger/factory';
+import { RepeatableProfiler } from 'shared/util/profiler';
+import type { DataService } from './data/data-service';
+import type { PlayerService } from './player-service';
 
 @Service()
 export class PlotService implements OnInit, OnStart {
@@ -27,7 +28,7 @@ export class PlotService implements OnInit, OnStart {
 	) {}
 
 	public onInit(): void | Promise<void> {
-		const plotsFolder = Workspace.FindFirstChild("Plots");
+		const plotsFolder = Workspace.FindFirstChild('Plots');
 
 		if (plotsFolder !== undefined) {
 			try {

@@ -1,4 +1,4 @@
-import { SpringOptions } from "@rbxts/ripple";
+import type { SpringOptions } from '@rbxts/ripple';
 
 type ValidTokenType = number | Color3 | UDim2 | UDim | Font | SpringOptions;
 
@@ -114,21 +114,21 @@ const theme: Theme = {
 	},
 
 	sounds: {
-		click: "rbxassetid://8755541422",
+		click: 'rbxassetid://8755541422',
 	},
 
 	images: {
-		logo: "rbxassetid://8755541422",
-		circle: "rbxassetid://18416727845",
-		stripe: "rbxassetid://18490111133",
+		logo: 'rbxassetid://8755541422',
+		circle: 'rbxassetid://18416727845',
+		stripe: 'rbxassetid://18490111133',
 	},
 	fonts: {
 		sans: {
-			Light: Font.fromName("BuilderSans", Enum.FontWeight.Light),
-			Regular: Font.fromName("BuilderSans", Enum.FontWeight.Regular),
-			SemiBold: Font.fromName("BuilderSans", Enum.FontWeight.SemiBold),
-			Bold: Font.fromName("BuilderSans", Enum.FontWeight.Bold),
-			Black: Font.fromName("BuilderSans", Enum.FontWeight.ExtraBold),
+			Light: Font.fromName('BuilderSans', Enum.FontWeight.Light),
+			Regular: Font.fromName('BuilderSans', Enum.FontWeight.Regular),
+			SemiBold: Font.fromName('BuilderSans', Enum.FontWeight.SemiBold),
+			Bold: Font.fromName('BuilderSans', Enum.FontWeight.Bold),
+			Black: Font.fromName('BuilderSans', Enum.FontWeight.ExtraBold),
 		},
 	},
 	springs: {
@@ -140,4 +140,4 @@ const theme: Theme = {
 
 export default theme;
 
-export type ColorToken = keyof Theme["colors"];
+export type ColorToken = keyof Theme['colors'];

@@ -1,13 +1,13 @@
-import React, { Binding } from "@rbxts/react";
+import React, { type Binding } from '@rbxts/react';
 
 export type NumberOrUDim = number | UDim;
 
-interface BorderRadiusProps extends Partial<Omit<WritableProperties<UICorner>, "CornerRadius">> {
+interface BorderRadiusProps extends Partial<Omit<WritableProperties<UICorner>, 'CornerRadius'>> {
 	radius?: number;
 }
 
 export function getPadding(udim?: NumberOrUDim): UDim {
-	if (typeIs(udim, "number")) {
+	if (typeIs(udim, 'number')) {
 		return new UDim(0, udim);
 	}
 
@@ -21,7 +21,7 @@ export const BorderRadius = React.forwardRef((props: BorderRadiusProps, ref: Rea
 
 interface PaddingProps
 	extends Partial<
-		Omit<WritableProperties<UIPadding>, "PaddingBottom" | "PaddingLeft" | "PaddingRight" | "PaddingTop">
+		Omit<WritableProperties<UIPadding>, 'PaddingBottom' | 'PaddingLeft' | 'PaddingRight' | 'PaddingTop'>
 	> {
 	all?: NumberOrUDim;
 	horizontal?: NumberOrUDim;
@@ -47,7 +47,7 @@ export const Padding = React.forwardRef((props: PaddingProps, ref: React.Ref<UIP
 });
 
 interface TextSizeConstraintProps
-	extends Partial<Omit<WritableProperties<UITextSizeConstraint>, "MaxTextSize" | "MinTextSize">> {
+	extends Partial<Omit<WritableProperties<UITextSizeConstraint>, 'MaxTextSize' | 'MinTextSize'>> {
 	min?: number;
 	max?: number;
 }
@@ -60,7 +60,7 @@ export const TextSizeConstraint = React.forwardRef(
 	},
 );
 
-interface ScaleProps extends Partial<Omit<WritableProperties<UIScale>, "Scale">> {
+interface ScaleProps extends Partial<Omit<WritableProperties<UIScale>, 'Scale'>> {
 	scale?: number | Binding<number>;
 }
 
@@ -70,7 +70,7 @@ export const Scale = React.forwardRef((props: ScaleProps, ref: React.Ref<UIScale
 	return <uiscale ref={ref} Scale={scale} />;
 });
 
-interface AspectRatioProps extends Partial<Omit<WritableProperties<UIAspectRatioConstraint>, "AspectRatio">> {
+interface AspectRatioProps extends Partial<Omit<WritableProperties<UIAspectRatioConstraint>, 'AspectRatio'>> {
 	aspectRatio?: number;
 }
 
@@ -80,7 +80,7 @@ export const AspectRatio = React.forwardRef((props: AspectRatioProps, ref: React
 	return <uiaspectratioconstraint ref={ref} AspectRatio={aspectRatio} />;
 });
 
-interface SizeConstraintProps extends Partial<Omit<WritableProperties<UISizeConstraint>, "MaxSize" | "MinSize">> {
+interface SizeConstraintProps extends Partial<Omit<WritableProperties<UISizeConstraint>, 'MaxSize' | 'MinSize'>> {
 	min?: Vector2;
 	max?: Vector2;
 }
@@ -91,7 +91,7 @@ export const SizeConstraint = React.forwardRef((props: SizeConstraintProps, ref:
 	return <uisizeconstraint ref={ref} MaxSize={max} MinSize={min} />;
 });
 
-interface ImageLabelProps extends Partial<Omit<WritableProperties<ImageLabel>, "Image">> {
+interface ImageLabelProps extends Partial<Omit<WritableProperties<ImageLabel>, 'Image'>> {
 	image: RbxAssetId;
 }
 
@@ -126,7 +126,7 @@ export const Image = React.forwardRef((props: ImageLabelProps, ref: React.Ref<Im
 });
 
 export interface StrokeProps
-	extends Partial<Omit<WritableProperties<UIStroke>, "Color" | "Transparency" | "Thickness">> {
+	extends Partial<Omit<WritableProperties<UIStroke>, 'Color' | 'Transparency' | 'Thickness'>> {
 	color?: Color3;
 	transparency?: number;
 	thickness?: number;
@@ -138,7 +138,7 @@ export const Stroke = React.forwardRef((props: StrokeProps, ref: React.Ref<UIStr
 	return <uistroke ref={ref} Color={color} Transparency={transparency} Thickness={thickness} />;
 });
 
-interface ListLayoutProps extends Partial<Omit<WritableProperties<UIListLayout>, "Padding" | "FillDirection">> {
+interface ListLayoutProps extends Partial<Omit<WritableProperties<UIListLayout>, 'Padding' | 'FillDirection'>> {
 	padding?: NumberOrUDim;
 	fillDirection?: Enum.FillDirection;
 }

@@ -1,4 +1,4 @@
-import type { ProfileStore, JSONAcceptable, ConstantName, Profile } from "./types";
+import type { ConstantName, JSONAcceptable, Profile, ProfileStore } from './types';
 
 interface ProfileStoreInternal<T> extends ProfileStore<T> {
 	Mock: ProfileStore<T>;
@@ -25,7 +25,7 @@ interface ProfileStoreConstructor {
 	OnCriticalToggle: {
 		Connect: (self: any, listener: (isCritical: boolean) => void) => { Disconnect: (self: any) => void };
 	};
-	DataStoreState: "NotReady" | "NoInternet" | "NoAccess" | "Access";
+	DataStoreState: 'NotReady' | 'NoInternet' | 'NoAccess' | 'Access';
 	SetConstant: (name: ConstantName, value: number) => void;
 }
 

@@ -1,10 +1,10 @@
-import React from "@rbxts/react";
+import React from '@rbxts/react';
 
-import { TooltipComponent } from "@rbxts/react-tooltip";
-import { useSpring, useSprings } from "client/ui/hooks/useSpring";
-import theme from "client/ui/theme";
+import type { TooltipComponent } from '@rbxts/react-tooltip';
+import { useSpring, useSprings } from 'client/ui/hooks/useSpring';
+import theme from 'client/ui/theme';
 
-import { TextSizeConstraint, Padding, Stroke, BorderRadius, Scale } from "client/ui/components/lib";
+import { BorderRadius, Padding, Scale, Stroke, TextSizeConstraint } from 'client/ui/components/lib';
 
 type TooltipComponentProps = Parameters<TooltipComponent>[0];
 

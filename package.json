@@ -6,13 +6,14 @@
 		"build": "rbxtsc",
 		"watch": "rbxtsc -w",
 		"dev": "rbxtsc -w",
-		"format": "prettier --write ."
+		"format": "biome check --fix"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "MIT",
 	"description": "",
 	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
 		"@rbxts/compiler-types": "^3.0.0-types.0",
 		"@rbxts/types": "^1.0.840",
 		"@typescript-eslint/eslint-plugin": "^8.26.0",

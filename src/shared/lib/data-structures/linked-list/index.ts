@@ -30,7 +30,7 @@ export interface ILinkedList<K extends defined, V extends defined> {
 
 export type ReadonlyILinkedList<K extends defined, V extends defined> = Omit<
 	ILinkedList<K, V>,
-	"add" | "remove" | "clear"
+	'add' | 'remove' | 'clear'
 >;
 
 export class LinkedList<K extends defined, V extends defined> implements ILinkedList<K, V> {

@@ -1,9 +1,9 @@
-import { Assert } from "@rbxts/lunit";
-import { LinkedList } from "shared/lib/data-structures/linked-list";
-import { PLATFORM_INSTANCE_NAME, PLOT_STRUCTURES_FOLDER_NAME } from "shared/lib/plot/configs";
-import { hitboxIsCollidedInPlot } from "shared/lib/plot/utils/plot-collisions";
-import { IStructureInstance, SerializedStructureInstance } from "shared/lib/residential/types";
-import { getAllCharacters } from "shared/util/character-utils";
+import { Assert } from '@rbxts/lunit';
+import { LinkedList } from 'shared/lib/data-structures/linked-list';
+import { PLATFORM_INSTANCE_NAME, PLOT_STRUCTURES_FOLDER_NAME } from 'shared/lib/plot/configs';
+import { hitboxIsCollidedInPlot } from 'shared/lib/plot/utils/plot-collisions';
+import type { IStructureInstance, SerializedStructureInstance } from 'shared/lib/residential/types';
+import { getAllCharacters } from 'shared/util/character-utils';
 
 export type SerializedPlotInstance = {
 	structures: SerializedStructureInstance[];
@@ -87,7 +87,7 @@ export default class Plot {
 	public addStructure(
 		structureInstance: IStructureInstance,
 		cframe: CFrame,
-		positionRelativeToPlatform: boolean = false,
+		positionRelativeToPlatform = false,
 	): void {
 		// First, determine if there will be any collision issues
 		// Clone a hitbox

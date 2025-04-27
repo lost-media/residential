@@ -1,6 +1,7 @@
-import React, { Binding, InstanceChangeEvent } from "@rbxts/react";
-import theme from "../theme";
-import { AspectRatio } from "../components/lib";
+import type React from '@rbxts/react';
+import type { Binding, InstanceChangeEvent } from '@rbxts/react';
+import { AspectRatio } from '../components/lib';
+import theme from '../theme';
 
 interface CircleProps {
 	active?: boolean;

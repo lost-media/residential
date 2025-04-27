@@ -1,8 +1,8 @@
-import { OnStart, Service } from "@flamework/core";
-import { HttpService, Players } from "@rbxts/services";
-import type { Profile } from "server/lib/profile-store/types";
-import LoggerFactory from "shared/util/logger/factory";
-import { PlayerService } from "../player-service";
+import { type OnStart, Service } from '@flamework/core';
+import { HttpService, Players } from '@rbxts/services';
+import type { Profile } from 'server/lib/profile-store/types';
+import LoggerFactory from 'shared/util/logger/factory';
+import type { PlayerService } from '../player-service';
 
 @Service()
 export class DataService implements OnStart {
@@ -36,7 +36,7 @@ export class DataService implements OnStart {
 		LoggerFactory.getLogger().log(
 			`Ended ${count} profile(s) for Player ${player.Name}'s session`,
 			undefined,
-			"DataService",
+			'DataService',
 		);
 	}
 

@@ -6,7 +6,7 @@
 		"build": "rbxtsc",
 		"watch": "rbxtsc -w",
 		"dev": "rbxtsc -w",
-		"format": "biome check --fix"
+		"format": "prettier --write ."
 	},
 	"keywords": [],
 	"author": "",

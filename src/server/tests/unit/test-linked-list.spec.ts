@@ -3,7 +3,7 @@ import { LinkedList } from "shared/lib/data-structures/linked-list";
 
 @Decorators.Tag("Library")
 class TestLinkedList {
-	private testLinkedList: LinkedList<defined, defined> = new LinkedList<number, number>();
+	private testLinkedList: LinkedList<number, number> = new LinkedList<number, number>();
 
 	@Decorators.BeforeEach
 	setUp() {

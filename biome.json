@@ -97,6 +97,7 @@
 		"ignore": ["./out"]
 	},
 	"javascript": {
+		"globals": ["Player"],
 		"formatter": {
 			"jsxQuoteStyle": "double",
 			"quoteProperties": "asNeeded",

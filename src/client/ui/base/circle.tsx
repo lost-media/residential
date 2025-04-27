@@ -1,4 +1,4 @@
-import type React from "@rbxts/react";
+import React from "@rbxts/react";
 import type { Binding, InstanceChangeEvent } from "@rbxts/react";
 import { AspectRatio } from "../components/lib";
 import theme from "../theme";
